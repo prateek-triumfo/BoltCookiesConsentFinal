@@ -16,6 +16,58 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        /* Custom styling for the user name button */
+        .user-dropdown-btn {
+            font-size: 1.1rem;
+            font-weight: 600;
+            background-color: #f8f9fa;
+            border: 1px solid #ccc;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+
+        .user-dropdown-btn:hover {
+            background-color: #007bff;
+            color: #fff;
+            border-color: #007bff;
+        }
+
+        /* Tile layout for links */
+        .tile-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .tile {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .tile .tile-link {
+            display: block;
+            font-size: 1.2rem;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .tile .tile-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <div id="app">
@@ -52,40 +104,49 @@
                                 </li>
                             @endif
                         @else
-                            <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
-                                    {{ Auth::user()->name }}
-                
-                                </a>
+                        <li class="nav-item dropdown">
+    <!-- User Name Button -->
+    <button class="user-dropdown-btn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        {{ Auth::user()->name }}
+    </button>
 
-                                        <div class="dropdown-divider">
-                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                    @if (Auth::user())
-                                        <a class="dropdown-item" href="{{ route('admin.consent.categories.index') }}">
-                                            Manage Consent Categories
-                                        </a>
-                                        <a class="dropdown-item" href="{{ route('admin.consent.logs.index') }}">
-                                            View Consent Logs
-                                        </a>
-                                        <div class="dropdown-divider"></div>
-                                    @endif
-                                    
-                                    <a class="dropdown-item" href="{{ route('logout') }}"
-                                       onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
-                                        {{ __('Logout') }}
-                                    </a>
+    <div class="dropdown-menu dropdown-menu-end">
+        <!-- Logout Button -->
+        <a href="{{ route('logout') }}" class="dropdown-item" 
+            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            Logout
+        </a>
+        
+        <!-- Logout form (hidden) to trigger the logout route) -->
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+            @csrf
+        </form>
+    </div>
+</li>
 
-                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                        @csrf
-                                    </form>
-                                </div>
-                            </li>
                         @endguest
                     </ul>
                 </div>
             </div>
         </nav>
+
+        <!-- Tiles Layout for Links -->
+        @if(Auth::check())
+            <div class="container tile-container">
+                @if (Auth::user())
+                    <div class="tile">
+                        <a href="{{ route('admin.consent.categories.index') }}" class="tile-link">
+                            <strong>Manage Consent Categories</strong>
+                        </a>
+                    </div>
+                    <div class="tile">
+                        <a href="{{ route('admin.consent.logs.index') }}" class="tile-link">
+                            <strong>View Consent Logs</strong>
+                        </a>
+                    </div>
+                @endif
+            </div>
+        @endif
 
         <main class="py-4">
             @yield('content')
@@ -93,31 +154,11 @@
         @if(!isset($hasConsent) || !$hasConsent)
             @include('consent.banner')
         @endif
-       
     </div>
     
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     @stack('scripts')
-    
-    <!-- Conditionally loaded scripts based on consent -->
-    @if(isset($consentPreferences) && $consentPreferences)
-        @if($consentPreferences['analytics'] ?? false)
-            <!-- Analytics scripts -->
-            <script>
-                console.log('Analytics scripts loaded');
-                // Google Analytics or similar would go here
-            </script>
-        @endif
-        
-        @if($consentPreferences['marketing'] ?? false)
-            <!-- Marketing scripts -->
-            <script>
-                console.log('Marketing scripts loaded');
-                // Marketing tags would go here
-            </script>
-        @endif
-    @endif
 </body>
 </html>

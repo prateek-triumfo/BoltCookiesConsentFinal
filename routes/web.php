@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ConsentCategoryController;
 use App\Http\Controllers\Admin\ConsentLogController;
 use App\Http\Controllers\ConsentController;
 use App\Http\Controllers\ProfileController;
+use App\http\controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {

@@ -37,11 +37,7 @@
                                     >
                                         Dashboard
                                     </a>
-                                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('consent.manage') }}">Manage Cookies</a>
-                        </li>
-                    </ul>
+                                    
                                 @else
                                     <a
                                         href="{{ route('login') }}"
@@ -170,7 +166,7 @@
                             </div>
                         </div>
                     </main>
-
+@include('consent.banner')
                     <footer class="py-16 text-center text-sm text-black dark:text-white/70">
                         Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }})
                     </footer>

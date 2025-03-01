@@ -90,10 +90,10 @@
         <main class="py-4">
             @yield('content')
         </main>
-        
         @if(!isset($hasConsent) || !$hasConsent)
             @include('consent.banner')
         @endif
+       
     </div>
     
     <!-- Bootstrap JS -->

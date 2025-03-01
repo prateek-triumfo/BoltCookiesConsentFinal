@@ -41,56 +41,7 @@
             <button type="button" class="btn btn-outline-primary" id="consent-preference-manage">Manage Preference</button>
            
         </div>
-<style> 
-
-
-
-/* Style for the 'Manage Preferences' button */
-.consent-banner-manage {
-    position: fixed;
-    bottom: 20px;  /* Slightly above the bottom edge */
-    right: 20px;  /* Positioned on the right side */
-    z-index: 9998;
-}
-
-#consent-preference-manage {
-    font-size: 1rem;
-    padding: 0.75rem 1.5rem;
-    background-color: #007bff;
-    color: #fff;
-    border: 2px solid #007bff;
-    border-radius: 50px;  /* Rounded edges */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);  /* Light shadow */
-    transition: background-color 0.3s, border-color 0.3s, transform 0.2s;
-}
-
-#consent-preference-manage:hover {
-    background-color: #0056b3;
-    border-color: #0056b3;
-    transform: translateY(-2px);  /* Slight upward movement on hover */
-}
-
-#consent-preference-manage:focus {
-    outline: none; /* Removes the default outline on focus */
-    box-shadow: 0 0 0 3px rgba(38, 143, 255, 0.5); /* Blue shadow on focus */
-}
-
-@media (min-width: 768px) {
-    /* Adjust button size and positioning on larger screens */
-    .consent-banner-manage {
-        bottom: 30px;
-        right: 30px;
-    }
-    #consent-preference-manage {
-        font-size: 1.1rem;
-    }
-}
-
-
-
-
-
-
+<style>
     .consent-banner {
         position: fixed;
         bottom: 0;
@@ -256,126 +207,131 @@
         .consent-banner-container {
             padding: 1.5rem;
         }
-    } 
-    
+    }
 </style>
 
 <script>
-   document.addEventListener('DOMContentLoaded', function() {
-    const consentBanner = document.getElementById('consent-banner');
-    const consentBannerManage = document.getElementById('consent-banner-manage');
-    const consentClose = document.getElementById('consent-close');
-    const consentRejectAll = document.getElementById('consent-reject-all');
-    const consentPreferences = document.getElementById('consent-preferences');
-    const consentPreferencesManage = document.getElementById('consent-preference-manage');
-    const consentAcceptAll = document.getElementById('consent-accept-all');
-    const consentSave = document.getElementById('consent-save');
-    const consentOptions = document.querySelector('.consent-options');
-    const consentCheckboxes = document.querySelectorAll('.consent-checkbox');
-    
-    // Check if consent has already been given
-    fetch('{{ route('consent.preferences') }}')
-        .then(response => response.json())
-        .then(data => {
-            if (!data.consented) {
-                consentBanner.style.display = 'block';
-                consentBannerManage.style.display = 'none';
-            } else {
-                // Apply saved preferences
-                applyConsentPreferences(data.preferences);
-            }
-        });
-    
-    // Close button (temporary hide)
-    consentClose.addEventListener('click', function() {
-        consentBanner.style.display = 'none';
-    });
-    
-    // Reject All button
-    consentRejectAll.addEventListener('click', function() {
-        // Uncheck all non-required checkboxes
-        consentCheckboxes.forEach(checkbox => {
-            if (!checkbox.disabled) {
-                checkbox.checked = false;
-            }
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+        const consentBanner = document.getElementById('consent-banner');
+        const consentBannerManage = document.getElementById('consent-banner-manage');
+        const consentClose = document.getElementById('consent-close');
+        const consentRejectAll = document.getElementById('consent-reject-all');
+        const consentPreferences = document.getElementById('consent-preferences');
+        const consentPreferencesManage = document.getElementById('consent-preference-manage');
+        console.log(consentPreferences)
+        console.log(consentPreferencesManage)
+        const consentAcceptAll = document.getElementById('consent-accept-all');
+        const consentSave = document.getElementById('consent-save');
+        const consentOptions = document.querySelector('.consent-options');
+        const consentCheckboxes = document.querySelectorAll('.consent-checkbox');
         
-        saveConsent();
-    });
-    
-    // Preferences button (for managing preferences)
-    consentPreferences.addEventListener('click', function() {
-        consentOptions.style.display = 'block';
-        consentAcceptAll.style.display = 'none';
-        consentRejectAll.style.display = 'none';
-        consentPreferences.style.display = 'none';
-        consentSave.style.display = 'inline-block';
-    });
-    
-    // Manage Preference button (to show preferences layout)
-    consentPreferencesManage.addEventListener('click', function() {
-        consentBanner.style.display = 'block'; // Show the consent banner with preferences
-        //consentBannerManage.style.display = 'none'; // Hide the "Manage Preference" button section
-    });
+        // Check if consent has already been given
+        fetch('{{ route('consent.preferences') }}')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.consented) {
+                    consentBanner.style.display = 'block';
+                    consentBannerManage.style.display = 'none';
+                } else {
+                    // Apply saved preferences
+                    applyConsentPreferences(data.preferences);
 
-    // Accept All button
-    consentAcceptAll.addEventListener('click', function() {
-        // Check all checkboxes
-        consentCheckboxes.forEach(checkbox => {
-            checkbox.checked = true;
+                }
+            });
+        
+        // Close button (temporary hide)
+        consentClose.addEventListener('click', function() {
+            consentBanner.style.display = 'none';
         });
         
-        saveConsent();
-    });
-    
-    // Save Preferences button
-    consentSave.addEventListener('click', function() {
-        saveConsent();
-    });
-    
-    // Function to save consent
-    function saveConsent() {
-        const consentData = {};
-        
-        // Collect consent data
-        consentCheckboxes.forEach(checkbox => {
-            const key = checkbox.name.match(/\[(.*?)\]/)[1];
-            consentData[key] = checkbox.checked ? true : false;
+        // Reject All button
+        consentRejectAll.addEventListener('click', function() {
+            // Uncheck all non-required checkboxes
+            consentCheckboxes.forEach(checkbox => {
+                if (!checkbox.disabled) {
+                    checkbox.checked = false;
+                }
+            });
+            
+            saveConsent();
         });
         
-        // Send consent data to server
-        fetch('{{ route('consent.save') }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ consent: consentData })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                consentBanner.style.display = 'none';
-                applyConsentPreferences(consentData);
-            }
+        // Preferences button
+        consentPreferences.addEventListener('click', function() {
+            consentOptions.style.display = 'block';
+            consentAcceptAll.style.display = 'none';
+            consentRejectAll.style.display = 'none';
+            consentPreferences.style.display = 'none';
+            consentSave.style.display = 'inline-block';
         });
-    }
-    
-    // Function to apply consent preferences
-    function applyConsentPreferences(preferences) { 
-        console.log(preferences);
-        // This function would enable/disable scripts based on consent
-        // For example, only load Google Analytics if analytics consent is given
-        if (preferences && preferences.analytics) {
-            // Load analytics scripts
-            console.log('Analytics scripts loaded');
+        
+        consentPreferencesManage.addEventListener('click', function() { 
+            console.log(0);
+            consentOptions.style.display = 'none';
+            consentAcceptAll.style.display = 'block';
+            consentRejectAll.style.display = 'block';
+            consentPreferences.style.display = 'block';
+            //consentSave.style.display = 'inline-block';
+        });
+        // Accept All button
+        consentAcceptAll.addEventListener('click', function() {
+            // Check all checkboxes
+            consentCheckboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            
+            saveConsent();
+        });
+        
+        // Save Preferences button
+        consentSave.addEventListener('click', function() {
+            saveConsent();
+        });
+        
+        // Function to save consent
+        function saveConsent() {
+            const consentData = {};
+            
+            // Collect consent data
+            consentCheckboxes.forEach(checkbox => {
+                const key = checkbox.name.match(/\[(.*?)\]/)[1];
+                consentData[key] = checkbox.checked ? true : false;
+            });
+            
+            // Send consent data to server
+            fetch('{{ route('consent.save') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ consent: consentData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    consentBanner.style.display = 'none';
+                    consentBannerManage.style.display = 'block';
+
+                    applyConsentPreferences(consentData);
+                }
+            });
         }
         
-        if (preferences && preferences.marketing) {
-            // Load marketing scripts
-            console.log('Marketing scripts loaded');
+        // Function to apply consent preferences
+        function applyConsentPreferences(preferences) { 
+            console.log(preferences);
+            // This function would enable/disable scripts based on consent
+            // For example, only load Google Analytics if analytics consent is given
+            if (preferences && preferences.analytics) {
+                // Load analytics scripts
+                console.log('Analytics scripts loaded');
+            }
+            
+            if (preferences && preferences.marketing) {
+                // Load marketing scripts
+                console.log('Marketing scripts loaded');
+            }
         }
-    }
-});
-
+    });
 </script>

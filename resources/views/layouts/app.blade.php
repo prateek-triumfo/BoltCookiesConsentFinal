@@ -83,9 +83,11 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav me-auto">
+                        @if(!Request::is('admin/*') && !Request::is('dashboard'))
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('consent.manage') }}">Manage Cookies</a>
                         </li>
+                        @endif
                     </ul>
 
                     <!-- Right Side Of Navbar -->
@@ -135,8 +137,18 @@
             <div class="container tile-container">
                 @if (Auth::user())
                     <div class="tile">
+                        <a href="{{ route('admin.banner.edit') }}" class="tile-link">
+                            <strong>Banner Settings</strong>
+                        </a>
+                    </div>
+                    <div class="tile">
                         <a href="{{ route('admin.consent.categories.index') }}" class="tile-link">
                             <strong>Manage Consent Categories</strong>
+                        </a>
+                    </div>
+                    <div class="tile">
+                        <a href="{{ route('admin.consent.domains.index') }}" class="tile-link">
+                            <strong>Manage Domains</strong>
                         </a>
                     </div>
                     <div class="tile">
@@ -151,7 +163,11 @@
         <main class="py-4">
             @yield('content')
         </main>
-        @if(!isset($hasConsent) || !$hasConsent)
+        @php
+            $cookieConsent = request()->cookie('consent_preferences');
+            $hasConsent = !empty($cookieConsent);
+        @endphp
+        @if(!$hasConsent)
             @include('consent.banner')
         @endif
     </div>

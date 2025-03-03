@@ -1,11 +1,11 @@
 <div id="consent-banner" class="consent-banner" style="display: none;">
     <div class="consent-banner-container">
         <div class="consent-banner-header">
-            <h3>Cookie Consent</h3>
+            <h3>{{ $bannerSettings->title }}</h3>
             <button type="button" class="consent-close" id="consent-close">&times;</button>
         </div>
         <div class="consent-banner-body">
-            <p>We use cookies to enhance your browsing experience, serve personalized ads or content, and analyze our traffic. By clicking "Accept All", you consent to our use of cookies.</p>
+            <p>{{ $bannerSettings->description }}</p>
             
             <div class="consent-options">
                 @foreach($categories as $category)
@@ -28,354 +28,428 @@
             </div>
         </div>
         <div class="consent-banner-footer">
-            <button type="button" class="btn btn-outline-secondary" id="consent-reject-all">Reject All</button>
-            <button type="button" class="btn btn-outline-primary" id="consent-preferences">Preferences</button>
-            <button type="button" class="btn btn-primary" id="consent-accept-all">Accept All</button>
+            @if($bannerSettings->show_reject_button)
+            <button type="button" class="btn btn-outline-secondary" id="consent-reject-all">{{ $bannerSettings->reject_button_text }}</button>
+            @endif
+            @if($bannerSettings->show_settings_button)
+            <button type="button" class="btn btn-outline-primary" id="consent-preferences">{{ $bannerSettings->settings_button_text }}</button>
+            @endif
+            <button type="button" class="btn btn-primary" id="consent-accept-all">{{ $bannerSettings->accept_button_text }}</button>
             <button type="button" class="btn btn-success" id="consent-save" style="display: none;">Save Preferences</button>
         </div>
     </div>
 </div>
 
+<div class="consent-banner-manage" style="display: none;">
+    @if($bannerSettings->show_settings_button)
+    <button type="button" class="btn btn-outline-primary" id="consent-preference-manage">
+        {{ $bannerSettings->settings_button_text }}
+    </button>
+    @endif
+</div>
 
-<div class="consent-banner-manage" >
-            <button type="button" class="btn btn-outline-primary" id="consent-preference-manage">Manage Preference</button>
-           
-        </div>
-<style> 
-
-
-
+<style>
 /* Style for the 'Manage Preferences' button */
 .consent-banner-manage {
     position: fixed;
-    bottom: 20px;  /* Slightly above the bottom edge */
-    right: 20px;  /* Positioned on the right side */
-    z-index: 9998;
+    bottom: {{ $bannerSettings->margin }}px;
+    right: {{ $bannerSettings->margin }}px;
+    z-index: {{ $bannerSettings->z_index - 1 }};
 }
 
 #consent-preference-manage {
-    font-size: 1rem;
+    font-size: {{ $bannerSettings->font_size }};
     padding: 0.75rem 1.5rem;
-    background-color: #007bff;
-    color: #fff;
-    border: 2px solid #007bff;
-    border-radius: 50px;  /* Rounded edges */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);  /* Light shadow */
+    background-color: {{ $bannerSettings->button_style === 'filled' ? $bannerSettings->primary_color : 'transparent' }};
+    color: {{ $bannerSettings->button_style === 'filled' ? '#fff' : $bannerSettings->primary_color }};
+    border: 2px solid {{ $bannerSettings->primary_color }};
+    border-radius: {{ $bannerSettings->border_radius }};
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: background-color 0.3s, border-color 0.3s, transform 0.2s;
 }
 
 #consent-preference-manage:hover {
-    background-color: #0056b3;
-    border-color: #0056b3;
-    transform: translateY(-2px);  /* Slight upward movement on hover */
+    background-color: {{ $bannerSettings->button_style === 'filled' ? $bannerSettings->secondary_color : $bannerSettings->primary_color }};
+    border-color: {{ $bannerSettings->button_style === 'filled' ? $bannerSettings->secondary_color : $bannerSettings->primary_color }};
+    color: #fff;
+    transform: translateY(-2px);
 }
 
 #consent-preference-manage:focus {
-    outline: none; /* Removes the default outline on focus */
-    box-shadow: 0 0 0 3px rgba(38, 143, 255, 0.5); /* Blue shadow on focus */
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(38, 143, 255, 0.5);
 }
+
+.consent-banner {
+    position: fixed;
+    {{ $bannerSettings->position === 'bottom' ? 'bottom: 0;' : '' }}
+    {{ $bannerSettings->position === 'top' ? 'top: 0;' : '' }}
+    {{ $bannerSettings->position === 'center' ? 'top: 50%; transform: translateY(-50%);' : '' }}
+    left: 0;
+    right: 0;
+    background-color: {{ $bannerSettings->background_color }};
+    color: {{ $bannerSettings->text_color }};
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: {{ $bannerSettings->z_index }};
+    font-family: {{ $bannerSettings->font_family }};
+    font-size: {{ $bannerSettings->font_size }};
+}
+
+.consent-banner-container {
+    @if($bannerSettings->layout === 'box')
+    max-width: 600px;
+    @elseif($bannerSettings->layout === 'popup')
+    max-width: 500px;
+    @else
+    max-width: 1200px;
+    @endif
+    margin: 0 auto;
+    padding: {{ $bannerSettings->padding }}px;
+}
+
+.consent-banner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid {{ $bannerSettings->text_color }}20;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.consent-banner-header h3 {
+    margin: 0;
+    font-size: calc({{ $bannerSettings->font_size }} * 1.2);
+    color: {{ $bannerSettings->text_color }};
+}
+
+.consent-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    color: {{ $bannerSettings->text_color }};
+}
+
+.consent-banner-body {
+    margin-bottom: 1rem;
+    color: {{ $bannerSettings->text_color }};
+}
+
+.consent-options {
+    display: none;
+    margin-top: 1rem;
+}
+
+.consent-option {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid {{ $bannerSettings->text_color }}20;
+}
+
+.consent-option:last-child {
+    border-bottom: none;
+}
+
+.consent-description {
+    margin-top: 0.25rem;
+    font-size: calc({{ $bannerSettings->font_size }} * 0.9);
+    color: {{ $bannerSettings->text_color }}CC;
+}
+
+.consent-required-badge {
+    display: inline-block;
+    background-color: {{ $bannerSettings->secondary_color }};
+    color: #fff;
+    font-size: calc({{ $bannerSettings->font_size }} * 0.75);
+    padding: 0.125rem 0.375rem;
+    border-radius: {{ $bannerSettings->border_radius }};
+    margin-left: 0.5rem;
+}
+
+.consent-banner-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.btn {
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+    border: 1px solid transparent;
+    padding: 0.375rem 0.75rem;
+    font-size: {{ $bannerSettings->font_size }};
+    line-height: 1.5;
+    border-radius: {{ $bannerSettings->border_radius }};
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    cursor: pointer;
+}
+
+.btn-outline-secondary {
+    color: {{ $bannerSettings->secondary_color }};
+    border-color: {{ $bannerSettings->secondary_color }};
+}
+
+.btn-outline-secondary:hover {
+    color: #fff;
+    background-color: {{ $bannerSettings->secondary_color }};
+    border-color: {{ $bannerSettings->secondary_color }};
+}
+
+.btn-outline-primary {
+    color: {{ $bannerSettings->primary_color }};
+    border-color: {{ $bannerSettings->primary_color }};
+}
+
+.btn-outline-primary:hover {
+    color: #fff;
+    background-color: {{ $bannerSettings->primary_color }};
+    border-color: {{ $bannerSettings->primary_color }};
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: {{ $bannerSettings->primary_color }};
+    border-color: {{ $bannerSettings->primary_color }};
+}
+
+.btn-primary:hover {
+    background-color: {{ $bannerSettings->secondary_color }};
+    border-color: {{ $bannerSettings->secondary_color }};
+}
+
+.btn-success {
+    color: #fff;
+    background-color: {{ $bannerSettings->primary_color }};
+    border-color: {{ $bannerSettings->primary_color }};
+}
+
+.btn-success:hover {
+    background-color: {{ $bannerSettings->secondary_color }};
+    border-color: {{ $bannerSettings->secondary_color }};
+}
+
+.form-check {
+    position: relative;
+    display: block;
+    padding-left: 1.25rem;
+}
+
+.form-check-input {
+    position: absolute;
+    margin-top: 0.3rem;
+    margin-left: -1.25rem;
+}
+
+.form-check-label {
+    margin-bottom: 0;
+    color: {{ $bannerSettings->text_color }};
+}
+
+@if($bannerSettings->theme === 'dark')
+body {
+    background-color: #333;
+}
+.consent-banner {
+    background-color: #444;
+}
+.consent-banner-header {
+    border-bottom-color: #666;
+}
+.consent-option {
+    border-bottom-color: #666;
+}
+@endif
 
 @media (min-width: 768px) {
-    /* Adjust button size and positioning on larger screens */
     .consent-banner-manage {
-        bottom: 30px;
-        right: 30px;
+        bottom: {{ $bannerSettings->margin + 10 }}px;
+        right: {{ $bannerSettings->margin + 10 }}px;
     }
     #consent-preference-manage {
-        font-size: 1.1rem;
+        font-size: calc({{ $bannerSettings->font_size }} * 1.1);
     }
 }
-
-
-
-
-
-
-    .consent-banner {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background-color: #fff;
-        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-        z-index: 9999;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    }
-    
-    .consent-banner-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 1rem;
-    }
-    
-    .consent-banner-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 0.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    .consent-banner-header h3 {
-        margin: 0;
-        font-size: 1.25rem;
-    }
-    
-    .consent-close {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        cursor: pointer;
-        padding: 0;
-        line-height: 1;
-    }
-    
-    .consent-banner-body {
-        margin-bottom: 1rem;
-    }
-    
-    .consent-options {
-        display: none;
-        margin-top: 1rem;
-    }
-    
-    .consent-option {
-        margin-bottom: 1rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .consent-option:last-child {
-        border-bottom: none;
-    }
-    
-    .consent-description {
-        margin-top: 0.25rem;
-        font-size: 0.875rem;
-        color: #6c757d;
-    }
-    
-    .consent-required-badge {
-        display: inline-block;
-        background-color: #6c757d;
-        color: white;
-        font-size: 0.75rem;
-        padding: 0.125rem 0.375rem;
-        border-radius: 0.25rem;
-        margin-left: 0.5rem;
-    }
-    
-    .consent-banner-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 0.5rem;
-    }
-    
-    .btn {
-        display: inline-block;
-        font-weight: 400;
-        text-align: center;
-        white-space: nowrap;
-        vertical-align: middle;
-        user-select: none;
-        border: 1px solid transparent;
-        padding: 0.375rem 0.75rem;
-        font-size: 1rem;
-        line-height: 1.5;
-        border-radius: 0.25rem;
-        transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        cursor: pointer;
-    }
-    
-    .btn-outline-secondary {
-        color: #6c757d;
-        border-color: #6c757d;
-    }
-    
-    .btn-outline-secondary:hover {
-        color: #fff;
-        background-color: #6c757d;
-        border-color: #6c757d;
-    }
-    
-    .btn-outline-primary {
-        color: #007bff;
-        border-color: #007bff;
-    }
-    
-    .btn-outline-primary:hover {
-        color: #fff;
-        background-color: #007bff;
-        border-color: #007bff;
-    }
-    
-    .btn-primary {
-        color: #fff;
-        background-color: #007bff;
-        border-color: #007bff;
-    }
-    
-    .btn-primary:hover {
-        background-color: #0069d9;
-        border-color: #0062cc;
-    }
-    
-    .btn-success {
-        color: #fff;
-        background-color: #28a745;
-        border-color: #28a745;
-    }
-    
-    .btn-success:hover {
-        background-color: #218838;
-        border-color: #1e7e34;
-    }
-    
-    .form-check {
-        position: relative;
-        display: block;
-        padding-left: 1.25rem;
-    }
-    
-    .form-check-input {
-        position: absolute;
-        margin-top: 0.3rem;
-        margin-left: -1.25rem;
-    }
-    
-    .form-check-label {
-        margin-bottom: 0;
-    }
-    
-    .d-none {
-        display: none !important;
-    }
-    
-    @media (min-width: 768px) {
-        .consent-banner-container {
-            padding: 1.5rem;
-        }
-    } 
-    
 </style>
 
 <script>
-   document.addEventListener('DOMContentLoaded', function() {
-    const consentBanner = document.getElementById('consent-banner');
-    const consentBannerManage = document.getElementById('consent-banner-manage');
-    const consentClose = document.getElementById('consent-close');
-    const consentRejectAll = document.getElementById('consent-reject-all');
-    const consentPreferences = document.getElementById('consent-preferences');
-    const consentPreferencesManage = document.getElementById('consent-preference-manage');
-    const consentAcceptAll = document.getElementById('consent-accept-all');
-    const consentSave = document.getElementById('consent-save');
-    const consentOptions = document.querySelector('.consent-options');
-    const consentCheckboxes = document.querySelectorAll('.consent-checkbox');
-    
-    // Check if consent has already been given
-    fetch('{{ route('consent.preferences') }}')
-        .then(response => response.json())
-        .then(data => {
-            if (!data.consented) {
-                consentBanner.style.display = 'block';
-                consentBannerManage.style.display = 'none';
-            } else {
-                // Apply saved preferences
-                applyConsentPreferences(data.preferences);
-            }
-        });
-    
-    // Close button (temporary hide)
-    consentClose.addEventListener('click', function() {
-        consentBanner.style.display = 'none';
-    });
-    
-    // Reject All button
-    consentRejectAll.addEventListener('click', function() {
-        // Uncheck all non-required checkboxes
-        consentCheckboxes.forEach(checkbox => {
-            if (!checkbox.disabled) {
-                checkbox.checked = false;
-            }
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+        const consentBanner = document.getElementById('consent-banner');
+        const consentBannerManage = document.querySelector('.consent-banner-manage');
+        const consentClose = document.getElementById('consent-close');
+        const consentRejectAll = document.getElementById('consent-reject-all');
+        const consentPreferences = document.getElementById('consent-preferences');
+        const consentAcceptAll = document.getElementById('consent-accept-all');
+        const consentSave = document.getElementById('consent-save');
+        const consentOptions = document.querySelector('.consent-options');
+        const consentCheckboxes = document.querySelectorAll('.consent-checkbox');
+        const consentPreferenceManage = document.getElementById('consent-preference-manage');
         
-        saveConsent();
-    });
-    
-    // Preferences button (for managing preferences)
-    consentPreferences.addEventListener('click', function() {
-        consentOptions.style.display = 'block';
-        consentAcceptAll.style.display = 'none';
-        consentRejectAll.style.display = 'none';
-        consentPreferences.style.display = 'none';
-        consentSave.style.display = 'inline-block';
-    });
-    
-    // Manage Preference button (to show preferences layout)
-    consentPreferencesManage.addEventListener('click', function() {
-        consentBanner.style.display = 'block'; // Show the consent banner with preferences
-        //consentBannerManage.style.display = 'none'; // Hide the "Manage Preference" button section
-    });
-
-    // Accept All button
-    consentAcceptAll.addEventListener('click', function() {
-        // Check all checkboxes
-        consentCheckboxes.forEach(checkbox => {
-            checkbox.checked = true;
-        });
-        
-        saveConsent();
-    });
-    
-    // Save Preferences button
-    consentSave.addEventListener('click', function() {
-        saveConsent();
-    });
-    
-    // Function to save consent
-    function saveConsent() {
-        const consentData = {};
-        
-        // Collect consent data
-        consentCheckboxes.forEach(checkbox => {
-            const key = checkbox.name.match(/\[(.*?)\]/)[1];
-            consentData[key] = checkbox.checked ? true : false;
-        });
-        
-        // Send consent data to server
-        fetch('{{ route('consent.save') }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ consent: consentData })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                consentBanner.style.display = 'none';
-                applyConsentPreferences(consentData);
-            }
-        });
-    }
-    
-    // Function to apply consent preferences
-    function applyConsentPreferences(preferences) { 
-        console.log(preferences);
-        // This function would enable/disable scripts based on consent
-        // For example, only load Google Analytics if analytics consent is given
-        if (preferences && preferences.analytics) {
-            // Load analytics scripts
-            console.log('Analytics scripts loaded');
+        // Function to initialize analytics scripts
+        function initializeAnalytics(scripts) {
+            scripts.forEach(script => {
+                if (script.type === 'script') {
+                    // External script
+                    const scriptElement = document.createElement('script');
+                    scriptElement.src = script.src;
+                    scriptElement.async = script.async || false;
+                    document.head.appendChild(scriptElement);
+                } else if (script.type === 'inline') {
+                    // Inline script
+                    const scriptElement = document.createElement('script');
+                    scriptElement.textContent = script.content;
+                    document.head.appendChild(scriptElement);
+                }
+            });
         }
         
-        if (preferences && preferences.marketing) {
-            // Load marketing scripts
-            console.log('Marketing scripts loaded');
+        // Function to toggle between banner modes (simple/detailed)
+        function toggleBannerMode(showPreferences) {
+            if (consentOptions) {
+                consentOptions.style.display = showPreferences ? 'block' : 'none';
+            }
+            if (consentSave) {
+                consentSave.style.display = showPreferences ? 'block' : 'none';
+            }
+            if (consentAcceptAll) {
+                consentAcceptAll.style.display = showPreferences ? 'none' : 'block';
+            }
+            if (consentRejectAll) {
+                consentRejectAll.style.display = showPreferences ? 'none' : 'block';
+            }
+            if (consentPreferences) {
+                consentPreferences.style.display = showPreferences ? 'none' : 'block';
+            }
         }
-    }
-});
-
+        
+        // Function to update checkboxes based on preferences
+        function updateCheckboxes(preferences) {
+            if (!preferences) return;
+            
+            consentCheckboxes.forEach(checkbox => {
+                const key = checkbox.name.match(/\[(.*?)\]/)[1];
+                if (!checkbox.disabled && preferences[key] !== undefined) {
+                    checkbox.checked = preferences[key];
+                }
+            });
+        }
+        
+        // Function to update banner visibility
+        function updateBannerVisibility(show, showPreferences = false) {
+            if (consentBanner) {
+                consentBanner.style.display = show ? 'block' : 'none';
+            }
+            if (consentBannerManage) {
+                consentBannerManage.style.display = show ? 'none' : 'block';
+            }
+            if (show && showPreferences) {
+                toggleBannerMode(true);
+            } else if (show) {
+                toggleBannerMode(false);
+            }
+        }
+        
+        // Check if consent has already been given
+        fetch('{{ route('consent.preferences') }}')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.consented) {
+                    updateBannerVisibility(true);
+                } else {
+                    updateBannerVisibility(false);
+                    updateCheckboxes(data.preferences);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading preferences:', error);
+            });
+        
+        // Close button (temporary hide)
+        if (consentClose) {
+            consentClose.addEventListener('click', function() {
+                updateBannerVisibility(false);
+            });
+        }
+        
+        // Reject All button
+        if (consentRejectAll) {
+            consentRejectAll.addEventListener('click', function() {
+                consentCheckboxes.forEach(checkbox => {
+                    if (!checkbox.disabled) {
+                        checkbox.checked = false;
+                    }
+                });
+                saveConsent();
+            });
+        }
+        
+        // Preferences button
+        if (consentPreferences) {
+            consentPreferences.addEventListener('click', function() {
+                toggleBannerMode(true);
+            });
+        }
+        
+        // Manage Preferences button (floating button)
+        if (consentPreferenceManage) {
+            consentPreferenceManage.addEventListener('click', function() {
+                updateBannerVisibility(true, true);
+            });
+        }
+        
+        // Accept All button
+        if (consentAcceptAll) {
+            consentAcceptAll.addEventListener('click', function() {
+                consentCheckboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                saveConsent();
+            });
+        }
+        
+        // Save Preferences button
+        if (consentSave) {
+            consentSave.addEventListener('click', function() {
+                saveConsent();
+            });
+        }
+        
+        // Function to save consent
+        function saveConsent() {
+            const consentData = {};
+            
+            consentCheckboxes.forEach(checkbox => {
+                const key = checkbox.name.match(/\[(.*?)\]/)[1];
+                consentData[key] = checkbox.checked;
+            });
+            
+            fetch('{{ route('consent.save') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ consent: consentData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'Consent preferences saved successfully') {
+                    updateBannerVisibility(false);
+                    updateCheckboxes(data.preferences);
+                    
+                    // Initialize analytics if scripts are provided
+                    if (data.analytics && Array.isArray(data.analytics)) {
+                        initializeAnalytics(data.analytics);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error saving preferences:', error);
+            });
+        }
+    });
 </script>

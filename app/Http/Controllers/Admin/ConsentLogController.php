@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ConsentLog;
+use App\Models\Domain;
+use App\Models\ConsentCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 
@@ -12,10 +14,20 @@ class ConsentLogController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     { 
-        $logs = ConsentLog::latest()->paginate(15); 
-        return view('admin.consent.logs.index', compact('logs'));
+        $domains = Domain::all();
+        $selectedDomain = null;
+        $logs = null;
+
+        if ($request->has('domain_id')) {
+            $selectedDomain = Domain::find($request->domain_id);
+            $logs = ConsentLog::where('domain_id', $request->domain_id)
+                ->latest()
+                ->paginate(15);
+        }
+        
+        return view('admin.consent.logs.index', compact('domains', 'selectedDomain', 'logs'));
     }
 
     /**
@@ -23,7 +35,10 @@ class ConsentLogController extends Controller
      */
     public function show(ConsentLog $log)
     {
-        return view('admin.consent.logs.show', compact('log'));
+        // Get the consent categories to display proper names
+        $categories = ConsentCategory::pluck('name', 'id')->toArray();
+        
+        return view('admin.consent.logs.show', compact('log', 'categories'));
     }
 
     /**

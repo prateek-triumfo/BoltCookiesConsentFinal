@@ -54,24 +54,38 @@
         const savePreferencesBtn = document.getElementById('save-preferences');
         const consentCheckboxes = document.querySelectorAll('.consent-checkbox');
         
+        // Function to update checkboxes based on preferences
+        function updateCheckboxes(preferences) {
+            if (!preferences) return;
+            
+            consentCheckboxes.forEach(checkbox => {
+                const key = checkbox.name.match(/\[(.*?)\]/)[1];
+                if (!checkbox.disabled && preferences[key] !== undefined) {
+                    checkbox.checked = preferences[key];
+                }
+            });
+        }
+        
         // Load current preferences
         fetch('{{ route('consent.preferences') }}')
-            .then(response => response.json())
-            .then(data => {
-                if (data.consented && data.preferences) {
-                    // Set checkboxes based on saved preferences
-                    Object.keys(data.preferences).forEach(key => {
-                        const checkbox = document.querySelector(`input[name="consent[${key}]"]`);
-                        if (checkbox && !checkbox.disabled) {
-                            checkbox.checked = data.preferences[key];
-                        }
-                    });
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
                 }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Received preferences:', data);
+                if (data.consented && data.preferences) {
+                    updateCheckboxes(data.preferences);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading preferences:', error);
             });
         
         // Reject All button
         rejectAllBtn.addEventListener('click', function() {
-            // Uncheck all non-required checkboxes
             consentCheckboxes.forEach(checkbox => {
                 if (!checkbox.disabled) {
                     checkbox.checked = false;
@@ -81,7 +95,6 @@
         
         // Accept All button
         acceptAllBtn.addEventListener('click', function() {
-            // Check all checkboxes
             consentCheckboxes.forEach(checkbox => {
                 checkbox.checked = true;
             });
@@ -91,13 +104,13 @@
         savePreferencesBtn.addEventListener('click', function() {
             const consentData = {};
             
-            // Collect consent data
             consentCheckboxes.forEach(checkbox => {
                 const key = checkbox.name.match(/\[(.*?)\]/)[1];
-                consentData[key] = checkbox.checked ? true : false;
+                consentData[key] = checkbox.checked;
             });
             
-            // Send consent data to server
+            console.log('Saving preferences:', consentData);
+            
             fetch('{{ route('consent.save') }}', {
                 method: 'POST',
                 headers: {
@@ -106,15 +119,25 @@
                 },
                 body: JSON.stringify({ consent: consentData })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    alert('Your preferences have been saved successfully.');
-                    
-                    // Reload page to apply new preferences
-                    window.location.reload();
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
                 }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Save response:', data);
+                if (data.message === 'Consent preferences saved successfully') {
+                    // Update checkboxes with the returned preferences
+                    updateCheckboxes(data.preferences);
+                    alert('Your preferences have been saved successfully.');
+                    // Redirect back to the previous page
+                    window.history.back();
+                }
+            })
+            .catch(error => {
+                console.error('Error saving preferences:', error);
+                alert('There was an error saving your preferences. Please try again.');
             });
         });
     });

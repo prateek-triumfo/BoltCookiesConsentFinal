@@ -30,6 +30,26 @@
                                     <td>{{ $log->ip_address }}</td>
                                 </tr>
                                 <tr>
+                                    <th>Device Type</th>
+                                    <td>
+                                        @if($log->device_type)
+                                            <span class="badge bg-info">{{ ucfirst($log->device_type) }}</span>
+                                        @else
+                                            <span class="text-muted">Not detected</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Language</th>
+                                    <td>
+                                        @if($log->language)
+                                            <code>{{ $log->language }}</code>
+                                        @else
+                                            <span class="text-muted">Not detected</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                <tr>
                                     <th>Consented At</th>
                                     <td>{{ $log->consented_at->format('Y-m-d H:i:s') }}</td>
                                 </tr>
@@ -63,9 +83,9 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($log->consent_data as $category => $status)
+                                    @foreach($log->consent_data as $categoryId => $status)
                                         <tr>
-                                            <td>{{ $category }}</td>
+                                            <td>{{ $categories[$categoryId] ?? "Category {$categoryId}" }}</td>
                                             <td>
                                                 @if($status)
                                                     <span class="badge bg-success">Accepted</span>

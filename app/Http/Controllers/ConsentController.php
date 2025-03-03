@@ -126,6 +126,59 @@ class ConsentController extends Controller
     }
 
     /**
+     * Set cookies based on consent categories
+     */
+    private function setCookiesByCategory($consentData)
+    {
+        $cookieOptions = [
+            'expires' => time() + (365 * 24 * 60 * 60), // 1 year
+            'path' => '/',
+            'domain' => config('session.domain'),
+            'secure' => config('session.secure'),
+            'httponly' => true,
+            'samesite' => config('session.same_site', 'lax')
+        ];
+
+        // Necessary cookies - always set regardless of consent
+        Cookie::queue('necessary_cookies', '1', $cookieOptions['expires']);
+
+        // Statistics cookies
+        if (isset($consentData['statistics']) && $consentData['statistics']) {
+            Cookie::queue('_ga', 'GA' . Str::random(10), $cookieOptions['expires']);
+            Cookie::queue('_gid', 'GID' . Str::random(10), $cookieOptions['expires']);
+        } else {
+            Cookie::queue(Cookie::forget('_ga'));
+            Cookie::queue(Cookie::forget('_gid'));
+            Cookie::queue(Cookie::forget('_gat'));
+        }
+
+        // Marketing cookies
+        if (isset($consentData['marketing']) && $consentData['marketing']) {
+            Cookie::queue('_fbp', 'FB' . Str::random(10), $cookieOptions['expires']);
+            if (config('services.facebook.pixel_id')) {
+                Cookie::queue('_fbc', 'FBC' . Str::random(10), $cookieOptions['expires']);
+            }
+        } else {
+            Cookie::queue(Cookie::forget('_fbp'));
+            Cookie::queue(Cookie::forget('_fbc'));
+        }
+
+        // Preferences cookies
+        if (isset($consentData['preferences']) && $consentData['preferences']) {
+            Cookie::queue('user_preferences', json_encode([
+                'theme' => request()->cookie('theme', 'light'),
+                'language' => app()->getLocale(),
+                'timezone' => request()->cookie('timezone', 'UTC')
+            ]), $cookieOptions['expires']);
+        } else {
+            Cookie::queue(Cookie::forget('user_preferences'));
+        }
+
+        // Store the complete consent state
+        Cookie::queue('consent_preferences', json_encode($consentData), $cookieOptions['expires']);
+    }
+
+    /**
      * Save user consent preferences.
      */
     public function saveConsent(Request $request)
@@ -151,52 +204,23 @@ class ConsentController extends Controller
         // Prepare consent data
         $consentData = $request->input('consent');
         
-        // Get required categories and ensure they are always consented
-        $requiredCategories = ConsentCategory::where('is_required', true)->get();
-        foreach ($requiredCategories as $category) {
-            $consentData[$category->key] = true;
-        }
-
-        // Detect device type using Agent
-        $agent = new Agent();
-        $deviceType = 'desktop';
-        if ($agent->isRobot()) {
-            $deviceType = 'bot';
-        } elseif ($agent->isTablet()) {
-            $deviceType = 'tablet';
-        } elseif ($agent->isMobile()) {
-            $deviceType = 'mobile';
-        }
-
-        // Get browser language
-        $language = $request->getPreferredLanguage() ?? 'en';
-
-        // Find existing consent log or create new one
-        $consentLog = ConsentLog::where('cookie_id', $cookieId)->first();
+        // Ensure necessary cookies are always consented
+        $consentData['necessary'] = true;
         
-        if ($consentLog) {
-            // Update existing consent log
-            $consentLog->update([
-                'consent_data' => $consentData,
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'device_type' => $deviceType,
-                'language' => $language,
-                'consented_at' => now(),
-            ]);
-        } else {
-            // Create new consent log
-            $consentLog = ConsentLog::create([
-                'cookie_id' => $cookieId,
-                'domain_id' => $domainModel->id,
-                'consent_data' => $consentData,
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'device_type' => $deviceType,
-                'language' => $language,
-                'consented_at' => now(),
-            ]);
-        }
+        // Set cookies based on consent categories
+        $this->setCookiesByCategory($consentData);
+
+        // Create new consent log
+        $consentLog = ConsentLog::create([
+            'cookie_id' => $cookieId,
+            'domain_id' => $domainModel->id,
+            'consent_data' => $consentData,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'device_type' => $this->detectDeviceType($request),
+            'language' => $this->getBrowserLanguage($request),
+            'consented_at' => now(),
+        ]);
 
         // Check if all consents are accepted
         $allAccepted = $this->isAllAccepted($consentData);
@@ -216,7 +240,7 @@ class ConsentController extends Controller
         // Prepare response
         $response = response()->json($responseData);
 
-        // Set cookie if it doesn't exist
+        // Set consent cookie ID if it doesn't exist
         if (!$request->cookie('consent_cookie_id')) {
             $response->cookie('consent_cookie_id', $cookieId, 365 * 24 * 60);
         }
@@ -238,7 +262,7 @@ class ConsentController extends Controller
             ]);
         }
 
-        $cookieId = $request->cookie('consent_id');
+        $cookieId = $request->cookie('consent_cookie_id'); // Fixed cookie name
         
         if ($cookieId) {
             $consentLog = ConsentLog::where('cookie_id', $cookieId)
@@ -270,18 +294,38 @@ class ConsentController extends Controller
                     $preferences[$category->key] = true;
                 }
 
+                // Check existing cookies and update preferences accordingly
+                if (isset($preferences['statistics'])) {
+                    $preferences['statistics'] = (bool)$request->cookie('_ga') || (bool)$request->cookie('_gid');
+                }
+                if (isset($preferences['marketing'])) {
+                    $preferences['marketing'] = (bool)$request->cookie('_fbp') || (bool)$request->cookie('_fbc');
+                }
+                if (isset($preferences['preferences'])) {
+                    $preferences['preferences'] = (bool)$request->cookie('user_preferences');
+                }
+
                 return response()->json([
                     'consented' => true,
                     'rejected' => false,
-                    'preferences' => $preferences
+                    'preferences' => $preferences,
+                    'cookie_id' => $cookieId
                 ]);
             }
+        }
+
+        // If no consent found, return default preferences with required categories
+        $activeCategories = ConsentCategory::where('is_active', true)->get();
+        $defaultPreferences = [];
+        
+        foreach ($activeCategories as $category) {
+            $defaultPreferences[$category->key] = $category->is_required;
         }
 
         return response()->json([
             'consented' => false,
             'rejected' => false,
-            'preferences' => null
+            'preferences' => $defaultPreferences
         ]);
     }
 

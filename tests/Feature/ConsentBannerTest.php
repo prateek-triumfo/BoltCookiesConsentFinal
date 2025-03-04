@@ -17,6 +17,9 @@ class ConsentBannerTest extends TestCase
     {
         parent::setUp();
 
+        // Clear all cookies before each test
+        $this->withCookies([]);
+
         // Create banner settings
         BannerSetting::create([
             'title' => 'Cookie Consent',
@@ -55,6 +58,13 @@ class ConsentBannerTest extends TestCase
             'description' => 'Cookies that help us understand how you use our website.',
             'is_required' => false,
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        // Clear all cookies after each test
+        $this->withCookies([]);
+        parent::tearDown();
     }
 
     /** @test */

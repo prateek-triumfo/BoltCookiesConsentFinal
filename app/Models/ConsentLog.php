@@ -16,6 +16,8 @@ class ConsentLog extends Model
         'ip_address',
         'domain',
         'cookie_id',
+        'device_type',
+        'language',
         'consented_at'
     ];
 

@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('ip_address')->nullable();
             $table->text('user_agent')->nullable();
             $table->string('domain');
+            $table->string('device_type'); // desktop, tablet, or mobile
+            $table->string('language');
             $table->timestamp('consented_at');
             $table->timestamps();
         });

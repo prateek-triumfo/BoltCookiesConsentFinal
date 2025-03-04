@@ -23,7 +23,9 @@ class ConsentController extends Controller
                 'consent_data' => 'required|array',
                 'ip_address' => 'nullable|ip',
                 'user_agent' => 'nullable|string',
-                'domain' => 'required|string'
+                'domain' => 'required|string',
+                'device_type' => 'required|string|in:desktop,tablet,mobile',
+                'language' => 'required|string'
             ]);
 
             Log::info('Request validated successfully');
@@ -56,12 +58,16 @@ class ConsentController extends Controller
                 'ip_address' => $validated['ip_address'] ?? $request->ip(),
                 'user_agent' => $validated['user_agent'] ?? $request->userAgent(),
                 'domain' => $validated['domain'],
+                'device_type' => $validated['device_type'],
+                'language' => $validated['language'],
                 'consented_at' => now()
             ]);
 
             Log::info('Consent saved successfully', [
                 'consent_log_id' => $consentLog->id,
-                'cookie_id' => $cookieId
+                'cookie_id' => $cookieId,
+                'device_type' => $validated['device_type'],
+                'language' => $validated['language']
             ]);
 
             // Increment domain's consent count
@@ -137,7 +143,9 @@ class ConsentController extends Controller
                 'success' => true,
                 'data' => [
                     'consent_data' => $consentLog ? $consentLog->consent_data : null,
-                    'cookie_id' => $consentLog ? $consentLog->cookie_id : null
+                    'cookie_id' => $consentLog ? $consentLog->cookie_id : null,
+                    'device_type' => $consentLog ? $consentLog->device_type : null,
+                    'language' => $consentLog ? $consentLog->language : null
                 ]
             ]);
 

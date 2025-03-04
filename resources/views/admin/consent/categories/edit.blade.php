@@ -8,7 +8,7 @@
                 <div class="card-header">Edit Consent Category</div>
 
                 <div class="card-body">
-                    <form method="POST" action="{{ route('admin.consent.categories.update', $category) }}">
+                    <form method="POST" action="{{ route('admin.categories.update', $category) }}">
                         @csrf
                         @method('PUT')
 
@@ -59,7 +59,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('admin.consent.categories.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                            <a href="{{ route('admin.categories.index') }}" class="btn btn-outline-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">Update Category</button>
                         </div>
                     </form>

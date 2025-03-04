@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\ConsentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,4 +17,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+// Consent API Routes
+Route::group(['prefix' => 'consent'], function () {
+    Route::post('save', [ConsentController::class, 'saveConsent']);
+    Route::get('get', [ConsentController::class, 'getConsent']);
 }); 

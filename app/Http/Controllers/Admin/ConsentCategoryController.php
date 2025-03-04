@@ -44,7 +44,7 @@ class ConsentCategoryController extends Controller
 
         ConsentCategory::create($validated);
 
-        return redirect()->route('admin.consent.categories.index')
+        return redirect()->route('admin.categories.index')
             ->with('success', 'Consent category created successfully.');
     }
 
@@ -75,7 +75,7 @@ class ConsentCategoryController extends Controller
 
         $category->update($validated);
 
-        return redirect()->route('admin.consent.categories.index')
+        return redirect()->route('admin.categories.index')
             ->with('success', 'Consent category updated successfully.');
     }
 
@@ -86,7 +86,7 @@ class ConsentCategoryController extends Controller
     {
         $category->delete();
 
-        return redirect()->route('admin.consent.categories.index')
+        return redirect()->route('admin.categories.index')
             ->with('success', 'Consent category deleted successfully.');
     }
 }

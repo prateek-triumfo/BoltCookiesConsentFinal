@@ -24,7 +24,7 @@
                         <div class="card-body">
                             <h5 class="card-title">Consent Categories</h5>
                             <p class="card-text">Manage consent categories and their settings.</p>
-                            <a href="{{ route('admin.consent.categories.index') }}" class="btn btn-primary">Manage Categories</a>
+                            <a href="{{ route('admin.categories.index') }}" class="btn btn-primary">Manage Categories</a>
                         </div>
                     </div>
                 </div>
@@ -35,7 +35,7 @@
                         <div class="card-body">
                             <h5 class="card-title">Domains</h5>
                             <p class="card-text">Manage domains and their configurations.</p>
-                            <a href="{{ route('admin.consent.domains.index') }}" class="btn btn-primary">Manage Domains</a>
+                            <a href="{{ route('admin.domains.index') }}" class="btn btn-primary">Manage Domains</a>
                         </div>
                     </div>
                 </div>

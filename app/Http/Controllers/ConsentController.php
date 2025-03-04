@@ -120,7 +120,7 @@ class ConsentController extends Controller
             ->orderBy('display_order')
             ->get();
             
-        $bannerSettings = BannerSetting::getDefault();
+        $bannerSettings = BannerSetting::getDefaultSettings();
             
         return view('consent.banner', compact('categories', 'bannerSettings'));
     }
@@ -338,7 +338,7 @@ class ConsentController extends Controller
             ->orderBy('display_order')
             ->get();
             
-        $bannerSettings = BannerSetting::getDefault();
+        $bannerSettings = BannerSetting::getDefaultSettings();
             
         return view('consent.manage', compact('categories', 'bannerSettings'));
     }

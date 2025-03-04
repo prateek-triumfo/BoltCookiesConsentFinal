@@ -8,7 +8,7 @@
                 <div class="card-header">Create Consent Category</div>
 
                 <div class="card-body">
-                    <form method="POST" action="{{ route('admin.consent.categories.store') }}">
+                    <form method="POST" action="{{ route('admin.categories.store') }}">
                         @csrf
 
                         <div class="mb-3">
@@ -58,7 +58,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('admin.consent.categories.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                            <a href="{{ route('admin.categories.index') }}" class="btn btn-outline-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">Create Category</button>
                         </div>
                     </form>

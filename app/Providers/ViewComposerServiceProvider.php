@@ -16,7 +16,7 @@ class ViewComposerServiceProvider extends ServiceProvider
     public function boot()
     {
         View::composer('consent.banner', function ($view) {
-            $view->with('bannerSettings', BannerSetting::getDefault());
+            $view->with('bannerSettings', BannerSetting::getDefaultSettings());
         });
     }
 } 

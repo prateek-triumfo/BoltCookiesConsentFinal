@@ -23,11 +23,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-
-
-
-
-
 // Consent Management Routes
 Route::prefix('consent')->name('consent.')->group(function () {
     Route::get('/banner', [ConsentController::class, 'index'])->name('banner');
@@ -48,20 +43,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::post('/banner/settings', [BannerSettingController::class, 'update'])->name('banner.update');
     Route::get('/banner/preview', [BannerSettingController::class, 'preview'])->name('banner.preview');
 
-    Route::prefix('consent')->name('consent.')->group(function () {
-        // Consent Categories
-        Route::resource('categories', ConsentCategoryController::class);
-        Route::resource('domains', DomainController::class);
+    // Consent Categories
+    Route::resource('categories', ConsentCategoryController::class);
 
-        // Consent Logs
-        Route::get('logs', [ConsentLogController::class, 'index'])->name('logs.index');
-        Route::get('logs/{log}', [ConsentLogController::class, 'show'])->name('logs.show');
-        Route::get('logs-export', [ConsentLogController::class, 'export'])->name('logs.export');
-    });
+    // Domains
+    Route::resource('domains', DomainController::class);
+    Route::post('domains/{domain}/regenerate-api-key', [DomainController::class, 'regenerateApiKey'])->name('domains.regenerate-api-key');
+    Route::post('domains/{domain}/regenerate-script-id', [DomainController::class, 'regenerateScriptId'])->name('domains.regenerate-script-id');
+    Route::get('domains/{domain}/embed-code', [DomainController::class, 'getEmbedCode'])->name('domains.embed-code');
+
+    // Consent Logs
+    Route::get('consent/logs', [ConsentLogController::class, 'index'])->name('consent.logs.index');
+    Route::get('consent/logs/{log}', [ConsentLogController::class, 'show'])->name('consent.logs.show');
+    Route::get('consent/logs-export', [ConsentLogController::class, 'export'])->name('consent.logs.export');
 });
-
-
-
-
 
 require __DIR__.'/auth.php';

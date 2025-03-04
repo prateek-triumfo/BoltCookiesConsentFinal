@@ -142,12 +142,12 @@
                         </a>
                     </div>
                     <div class="tile">
-                        <a href="{{ route('admin.consent.categories.index') }}" class="tile-link">
+                        <a href="{{ route('admin.categories.index') }}" class="tile-link">
                             <strong>Manage Consent Categories</strong>
                         </a>
                     </div>
                     <div class="tile">
-                        <a href="{{ route('admin.consent.domains.index') }}" class="tile-link">
+                        <a href="{{ route('admin.domains.index') }}" class="tile-link">
                             <strong>Manage Domains</strong>
                         </a>
                     </div>

@@ -13,10 +13,6 @@ class BannerSetting extends Model
         'position',
         'layout',
         'theme',
-        'primary_color',
-        'secondary_color',
-        'text_color',
-        'background_color',
         'button_style',
         'title',
         'description',
@@ -31,31 +27,33 @@ class BannerSetting extends Model
         'border_radius',
         'font_family',
         'font_size',
+        'primary_color',
+        'secondary_color',
+        'background_color',
+        'text_color',
+        'cookie_categories',
         'is_active'
     ];
 
     protected $casts = [
+        'cookie_categories' => 'array',
         'show_reject_button' => 'boolean',
         'show_settings_button' => 'boolean',
         'is_active' => 'boolean',
         'z_index' => 'integer',
         'padding' => 'integer',
-        'margin' => 'integer',
+        'margin' => 'integer'
     ];
 
-    public static function getDefault()
+    public static function getDefaultSettings()
     {
-        return self::firstOrCreate([], [
+        $defaultSettings = [
             'position' => 'bottom',
             'layout' => 'bar',
             'theme' => 'light',
-            'primary_color' => '#007bff',
-            'secondary_color' => '#6c757d',
-            'text_color' => '#212529',
-            'background_color' => '#ffffff',
             'button_style' => 'filled',
             'title' => 'Cookie Consent',
-            'description' => 'We use cookies to enhance your browsing experience and analyze our traffic. By clicking "Accept All", you consent to our use of cookies.',
+            'description' => 'We use cookies to enhance your browsing experience and analyze our traffic.',
             'accept_button_text' => 'Accept All',
             'reject_button_text' => 'Reject All',
             'settings_button_text' => 'Cookie Settings',
@@ -67,7 +65,43 @@ class BannerSetting extends Model
             'border_radius' => '4px',
             'font_family' => 'inherit',
             'font_size' => '14px',
+            'primary_color' => '#4CAF50',
+            'secondary_color' => '#2196F3',
+            'background_color' => '#ffffff',
+            'text_color' => '#000000',
+            'cookie_categories' => [
+                'necessary' => [
+                    'name' => 'Necessary',
+                    'description' => 'These cookies are essential for the website to function properly.',
+                    'required' => true
+                ],
+                'statistics' => [
+                    'name' => 'Statistics',
+                    'description' => 'These cookies help us understand how visitors interact with our website.',
+                    'required' => false
+                ],
+                'marketing' => [
+                    'name' => 'Marketing',
+                    'description' => 'These cookies are used to track visitors across websites.',
+                    'required' => false
+                ],
+                'preferences' => [
+                    'name' => 'Preferences',
+                    'description' => 'These cookies remember your settings and preferences.',
+                    'required' => false
+                ]
+            ],
             'is_active' => true
-        ]);
+        ];
+
+        // Try to get existing settings
+        $settings = self::first();
+
+        // If no settings exist, create new ones
+        if (!$settings) {
+            $settings = self::create($defaultSettings);
+        }
+
+        return $settings;
     }
 }

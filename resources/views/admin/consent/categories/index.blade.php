@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>Consent Categories</span>
-                    <a href="{{ route('admin.consent.categories.create') }}" class="btn btn-sm btn-primary">Add New Category</a>
+                    <a href="{{ route('admin.categories.create') }}" class="btn btn-sm btn-primary">Add New Category</a>
                 </div>
 
                 <div class="card-body">
@@ -53,8 +53,8 @@
                                         <td>{{ $category->display_order }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a href="{{ route('admin.consent.categories.edit', $category) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                                <form action="{{ route('admin.consent.categories.destroy', $category) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this category?');">
+                                                <a href="{{ route('admin.categories.edit', $category) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                                <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this category?');">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>

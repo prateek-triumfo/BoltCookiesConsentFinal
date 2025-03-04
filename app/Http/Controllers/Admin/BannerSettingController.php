@@ -10,7 +10,7 @@ class BannerSettingController extends Controller
 {
     public function edit()
     {
-        $settings = BannerSetting::getDefault();
+        $settings = BannerSetting::getDefaultSettings();
         
         return view('admin.banner.edit', [
             'settings' => $settings,
@@ -24,31 +24,21 @@ class BannerSettingController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
-            'position' => 'required|in:bottom,top,center',
-            'layout' => 'required|in:bar,box,popup',
-            'theme' => 'required|in:light,dark',
-            'primary_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
-            'secondary_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
-            'text_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
-            'background_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
-            'button_style' => 'required|in:filled,outlined',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'accept_button_text' => 'required|string|max:255',
-            'reject_button_text' => 'required|string|max:255',
-            'settings_button_text' => 'required|string|max:255',
-            'show_reject_button' => 'boolean',
-            'show_settings_button' => 'boolean',
-            'z_index' => 'required|integer|min:0',
-            'padding' => 'required|integer|min:0',
-            'margin' => 'required|integer|min:0',
-            'border_radius' => 'required|string|max:20',
-            'font_family' => 'required|string|max:255',
-            'font_size' => 'required|string|max:20',
+            'accept_all_text' => 'required|string|max:255',
+            'customize_text' => 'required|string|max:255',
+            'save_preferences_text' => 'required|string|max:255',
+            'reject_all_text' => 'required|string|max:255',
+            'cookie_categories' => 'required|array',
+            'primary_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
+            'secondary_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
+            'background_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
+            'text_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
             'is_active' => 'boolean',
         ]);
 
-        $settings = BannerSetting::getDefault();
+        $settings = BannerSetting::getDefaultSettings();
         $settings->update($validated);
 
         return redirect()->route('admin.banner.edit')
@@ -57,7 +47,7 @@ class BannerSettingController extends Controller
 
     public function preview()
     {
-        $settings = BannerSetting::getDefault();
+        $settings = BannerSetting::getDefaultSettings();
         return view('admin.banner.preview', compact('settings'));
     }
 }

@@ -610,7 +610,7 @@ body {
         }
         
         // Function to save consent
-        function saveConsent() {
+        function saveConsent(action = null) {
             const consentData = {};
             
             consentCheckboxes.forEach(checkbox => {
@@ -625,13 +625,21 @@ body {
                 return;
             }
             
+            const payload = {
+                consent: consentData
+            };
+            
+            if (action) {
+                payload.action = action;
+            }
+            
             fetch('/consent/save', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken
                 },
-                body: JSON.stringify({ consent: consentData })
+                body: JSON.stringify(payload)
             })
             .then(response => {
                 if (!response.ok) {
@@ -666,13 +674,25 @@ body {
             });
         }
         
+        // Reject All button
+        if (consentRejectAll) {
+            consentRejectAll.addEventListener('click', function() {
+                consentCheckboxes.forEach(checkbox => {
+                    if (!checkbox.disabled) {
+                        checkbox.checked = false;
+                    }
+                });
+                saveConsent('reject_all');
+            });
+        }
+        
         // Accept All button
         if (consentAcceptAll) {
             consentAcceptAll.addEventListener('click', function() {
                 consentCheckboxes.forEach(checkbox => {
                     checkbox.checked = true;
                 });
-                saveConsent();
+                saveConsent('accept_all');
             });
         }
         

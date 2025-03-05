@@ -15,7 +15,7 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('admin.consent.domains.update', $domain) }}" method="POST">
+                    <form action="{{ route('admin.domains.update', $domain) }}" method="POST">
                         @csrf
                         @method('PUT')
 
@@ -49,7 +49,7 @@
                             <label class="block text-sm font-medium text-gray-700">API Key</label>
                             <div class="mt-1 flex rounded-md shadow-sm">
                                 <input type="text" value="{{ $domain->api_key }}" readonly class="block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                <a href="{{ route('admin.consent.domains.regenerate-api-key', $domain) }}" class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <a href="{{ route('admin.domains.regenerate-api-key', $domain) }}" class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                     Regenerate
                                 </a>
                             </div>
@@ -59,7 +59,7 @@
                             <label class="block text-sm font-medium text-gray-700">Script ID</label>
                             <div class="mt-1 flex rounded-md shadow-sm">
                                 <input type="text" value="{{ $domain->script_id }}" readonly class="block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                <a href="{{ route('admin.consent.domains.regenerate-script-id', $domain) }}" class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <a href="{{ route('admin.domains.regenerate-script-id', $domain) }}" class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                     Regenerate
                                 </a>
                             </div>

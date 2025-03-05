@@ -3,7 +3,7 @@
     const defaultConfig = {
         scriptId: null,
         apiKey: null,
-        apiUrl: 'http://cokkiesconsent.local/api/consent'
+        apiUrl: window.BOLT_CONSENT_CONFIG.apiUrl || 'http://cokkiesconsent.local/api/consent'
     };
 
     // Merge user config with defaults
@@ -450,4 +450,4 @@
     } else {
         init();
     }
-})(); 
+})();

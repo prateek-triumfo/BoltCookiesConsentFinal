@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         return [
             App\Http\Middleware\ConsentMiddleware::class, // Add it to an array
+            App\Http\Middleware\AdminMiddleware::class, // Add it to an array
         ];   
      })
     ->withExceptions(function (Exceptions $exceptions) {

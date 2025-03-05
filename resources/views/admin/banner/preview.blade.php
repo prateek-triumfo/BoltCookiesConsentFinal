@@ -2,15 +2,19 @@
 
 @section('content')
 <div class="container">
-    <div class="row justify-content-center mb-4">
+    <div class="row justify-content-center">
         <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Banner Preview</h1>
+                <a href="{{ route('admin.banner.edit', $domain) }}" class="btn btn-primary btn-sm">Back to Settings</a>
+            </div>
+
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Banner Preview</h5>
-                    <a href="{{ route('admin.banner.edit') }}" class="btn btn-primary btn-sm">Back to Settings</a>
-                </div>
                 <div class="card-body">
-                    <p class="text-muted mb-0">This is how your consent banner will appear to users.</p>
+                    <!-- Preview content will go here -->
+                    <div class="preview-container">
+                        <!-- Banner preview will be rendered here -->
+                    </div>
                 </div>
             </div>
         </div>

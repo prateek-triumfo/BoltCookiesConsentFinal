@@ -8,6 +8,8 @@ use App\http\controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DomainController;
 use App\Http\Controllers\Admin\BannerSettingController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\UserController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -34,14 +36,12 @@ Route::prefix('consent')->name('consent.')->group(function () {
 // Admin Routes
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
     // Admin Dashboard
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Banner Settings
-    Route::get('/banner/settings', [BannerSettingController::class, 'edit'])->name('banner.edit');
-    Route::post('/banner/settings', [BannerSettingController::class, 'update'])->name('banner.update');
-    Route::get('/banner/preview', [BannerSettingController::class, 'preview'])->name('banner.preview');
+    Route::get('/banner/settings/{domain}/edit', [BannerSettingController::class, 'edit'])->name('banner.edit');
+    Route::put('/banner/settings/{domain}', [BannerSettingController::class, 'update'])->name('banner.update');
+    Route::get('/banner/settings/{domain}/preview', [BannerSettingController::class, 'preview'])->name('banner.preview');
 
     // Consent Categories
     Route::resource('categories', ConsentCategoryController::class);
@@ -56,6 +56,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('consent/logs', [ConsentLogController::class, 'index'])->name('consent.logs.index');
     Route::get('consent/logs/{log}', [ConsentLogController::class, 'show'])->name('consent.logs.show');
     Route::get('consent/logs-export', [ConsentLogController::class, 'export'])->name('consent.logs.export');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    Route::prefix('admin')->name('admin.')->middleware(['admin'])->group(function () {
+        // Existing routes...
+        
+        // Banner Settings Routes
+        Route::get('/banner-settings/{domain}/edit', [BannerSettingController::class, 'edit'])->name('banner-settings.edit');
+        Route::put('/banner-settings/{domain}', [BannerSettingController::class, 'update'])->name('banner-settings.update');
+        Route::get('/banner-settings/{domain}/preview', [BannerSettingController::class, 'preview'])->name('banner-settings.preview');
+    });
 });
 
 require __DIR__.'/auth.php';

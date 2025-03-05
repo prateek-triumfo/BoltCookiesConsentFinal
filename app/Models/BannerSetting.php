@@ -10,98 +10,89 @@ class BannerSetting extends Model
     use HasFactory;
 
     protected $fillable = [
-        'position',
-        'layout',
-        'theme',
-        'button_style',
-        'title',
-        'description',
-        'accept_button_text',
-        'reject_button_text',
-        'settings_button_text',
-        'show_reject_button',
-        'show_settings_button',
-        'z_index',
-        'padding',
-        'margin',
-        'border_radius',
+        'domain_id',
+        'banner_title',
+        'banner_description',
+        'primary_color',
+        'text_color',
+        'accept_color',
+        'reject_color',
+        'manage_color',
+        'save_color',
+        'cancel_color',
         'font_family',
         'font_size',
-        'primary_color',
-        'secondary_color',
-        'background_color',
-        'text_color',
-        'cookie_categories',
-        'is_active'
+        'accept_all_text',
+        'reject_all_text',
+        'manage_settings_text',
+        'save_preferences_text',
+        'cancel_text',
+        'necessary_cookie_title',
+        'statistics_cookie_title',
+        'marketing_cookie_title',
+        'preferences_cookie_title',
+        'necessary_cookie_description',
+        'statistics_cookie_description',
+        'marketing_cookie_description',
+        'preferences_cookie_description',
+        'show_reject_button',
+        'show_settings_button',
+        'show_categories_menu',
+        'show_statistics_category',
+        'show_marketing_category',
+        'show_preferences_category',
+        'manage_button_position',
     ];
 
     protected $casts = [
-        'cookie_categories' => 'array',
         'show_reject_button' => 'boolean',
         'show_settings_button' => 'boolean',
-        'is_active' => 'boolean',
-        'z_index' => 'integer',
-        'padding' => 'integer',
-        'margin' => 'integer'
+        'show_categories_menu' => 'boolean',
+        'show_statistics_category' => 'boolean',
+        'show_marketing_category' => 'boolean',
+        'show_preferences_category' => 'boolean',
     ];
 
-    public static function getDefaultSettings()
+    public function domain()
     {
-        $defaultSettings = [
-            'position' => 'bottom',
-            'layout' => 'bar',
-            'theme' => 'light',
-            'button_style' => 'filled',
-            'title' => 'Cookie Consent',
-            'description' => 'We use cookies to enhance your browsing experience and analyze our traffic.',
-            'accept_button_text' => 'Accept All',
-            'reject_button_text' => 'Reject All',
-            'settings_button_text' => 'Cookie Settings',
+        return $this->belongsTo(Domain::class);
+    }
+
+    public static function getDefaultSettings($domainId)
+    {
+        return [
+            'domain_id' => $domainId,
+            'banner_title' => 'We value your privacy',
+            'banner_description' => 'We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic. By clicking "Accept All", you consent to our use of cookies.',
+            'primary_color' => '#2563eb',
+            'text_color' => '#000000',
+            'accept_color' => '#16a34a',
+            'reject_color' => '#dc2626',
+            'manage_color' => '#4b5563',
+            'save_color' => '#2563eb',
+            'cancel_color' => '#6b7280',
+            'font_family' => 'Arial',
+            'font_size' => '14px',
+            'accept_all_text' => 'Accept All',
+            'reject_all_text' => 'Reject All',
+            'manage_settings_text' => 'Manage Settings',
+            'save_preferences_text' => 'Save Preferences',
+            'cancel_text' => 'Cancel',
+            'necessary_cookie_title' => 'Necessary Cookies',
+            'statistics_cookie_title' => 'Statistics Cookies',
+            'marketing_cookie_title' => 'Marketing Cookies',
+            'preferences_cookie_title' => 'Preferences Cookies',
+            'necessary_cookie_description' => 'These cookies are essential for the website to function properly.',
+            'statistics_cookie_description' => 'These cookies help us understand how visitors interact with the website.',
+            'marketing_cookie_description' => 'These cookies are used to deliver personalized advertisements.',
+            'preferences_cookie_description' => 'These cookies allow the website to remember choices you make.',
             'show_reject_button' => true,
             'show_settings_button' => true,
-            'z_index' => 1000,
-            'padding' => 20,
-            'margin' => 20,
-            'border_radius' => '4px',
-            'font_family' => 'inherit',
-            'font_size' => '14px',
-            'primary_color' => '#4CAF50',
-            'secondary_color' => '#2196F3',
-            'background_color' => '#ffffff',
-            'text_color' => '#000000',
-            'cookie_categories' => [
-                'necessary' => [
-                    'name' => 'Necessary',
-                    'description' => 'These cookies are essential for the website to function properly.',
-                    'required' => true
-                ],
-                'statistics' => [
-                    'name' => 'Statistics',
-                    'description' => 'These cookies help us understand how visitors interact with our website.',
-                    'required' => false
-                ],
-                'marketing' => [
-                    'name' => 'Marketing',
-                    'description' => 'These cookies are used to track visitors across websites.',
-                    'required' => false
-                ],
-                'preferences' => [
-                    'name' => 'Preferences',
-                    'description' => 'These cookies remember your settings and preferences.',
-                    'required' => false
-                ]
-            ],
-            'is_active' => true
+            'show_categories_menu' => true,
+            'show_statistics_category' => true,
+            'show_marketing_category' => true,
+            'show_preferences_category' => true,
+            'manage_button_position' => 'right',
         ];
-
-        // Try to get existing settings
-        $settings = self::first();
-
-        // If no settings exist, create new ones
-        if (!$settings) {
-            $settings = self::create($defaultSettings);
-        }
-
-        return $settings;
     }
 }

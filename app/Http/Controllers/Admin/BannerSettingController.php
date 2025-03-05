@@ -3,51 +3,62 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Domain;
 use App\Models\BannerSetting;
 use Illuminate\Http\Request;
 
 class BannerSettingController extends Controller
 {
-    public function edit()
+    public function edit(Domain $domain)
     {
-        $settings = BannerSetting::getDefaultSettings();
-        
-        return view('admin.banner.edit', [
-            'settings' => $settings,
-            'positions' => ['bottom', 'top', 'center'],
-            'layouts' => ['bar', 'box', 'popup'],
-            'themes' => ['light', 'dark'],
-            'buttonStyles' => ['filled', 'outlined'],
-        ]);
+        $bannerSetting = $domain->bannerSetting ?? new BannerSetting(['domain_id' => $domain->id]);
+        return view('admin.banner-settings.edit', compact('domain', 'bannerSetting'));
     }
 
-    public function update(Request $request)
+    public function update(Request $request, Domain $domain)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'accept_all_text' => 'required|string|max:255',
-            'customize_text' => 'required|string|max:255',
-            'save_preferences_text' => 'required|string|max:255',
-            'reject_all_text' => 'required|string|max:255',
-            'cookie_categories' => 'required|array',
-            'primary_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
-            'secondary_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
-            'background_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
-            'text_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
-            'is_active' => 'boolean',
+            'banner_title' => 'required|string|max:255',
+            'banner_description' => 'required|string',
+            'accept_all_text' => 'required|string|max:50',
+            'reject_all_text' => 'required|string|max:50',
+            'manage_settings_text' => 'required|string|max:50',
+            'save_preferences_text' => 'required|string|max:50',
+            'cancel_text' => 'required|string|max:50',
+            'primary_color' => 'required|string|max:7',
+            'accept_color' => 'required|string|max:7',
+            'reject_color' => 'required|string|max:7',
+            'background_color' => 'required|string|max:7',
+            'text_color' => 'required|string|max:7',
+            'font_family' => 'required|string',
+            'font_size' => 'required|integer|min:10|max:24',
+            'show_manage_button' => 'boolean',
+            'manage_button_position' => 'required|in:bottom-right,bottom-left,top-right,top-left',
+            'show_necessary_cookies' => 'boolean',
+            'show_statistics_cookies' => 'boolean',
+            'show_marketing_cookies' => 'boolean',
+            'show_preferences_cookies' => 'boolean',
         ]);
 
-        $settings = BannerSetting::getDefaultSettings();
-        $settings->update($validated);
+        // Convert boolean fields
+        $validated['show_manage_button'] = $request->boolean('show_manage_button');
+        $validated['show_necessary_cookies'] = $request->boolean('show_necessary_cookies');
+        $validated['show_statistics_cookies'] = $request->boolean('show_statistics_cookies');
+        $validated['show_marketing_cookies'] = $request->boolean('show_marketing_cookies');
+        $validated['show_preferences_cookies'] = $request->boolean('show_preferences_cookies');
 
-        return redirect()->route('admin.banner.edit')
+        $bannerSetting = $domain->bannerSetting()->updateOrCreate(
+            ['domain_id' => $domain->id],
+            $validated
+        );
+
+        return redirect()->route('admin.banner.edit', $domain)
             ->with('success', 'Banner settings updated successfully.');
     }
 
-    public function preview()
+    public function preview(Domain $domain)
     {
-        $settings = BannerSetting::getDefaultSettings();
-        return view('admin.banner.preview', compact('settings'));
+        $bannerSetting = $domain->bannerSetting ?? new BannerSetting(['domain_id' => $domain->id]);
+        return view('admin.banner-settings.preview', compact('domain', 'bannerSetting'));
     }
 }

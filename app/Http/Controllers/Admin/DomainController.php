@@ -103,8 +103,11 @@ class DomainController extends Controller
             ->with('success', 'Script ID regenerated successfully.');
     }
 
-    public function getEmbedCode(Domain $domain)
+    public function getEmbedCode($id)
     {
-        return view('admin.domains.embed-code', compact('domain'));
+        $domain = Domain::findOrFail($id);
+        $embedCode = $domain->getEmbedCode();
+
+        return view('admin.domains.embed_code', compact('embedCode'));
     }
 }

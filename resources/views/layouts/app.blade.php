@@ -137,7 +137,7 @@
             <div class="container tile-container">
                 @if (Auth::user())
                     <div class="tile">
-                        <a href="{{ route('admin.banner.edit') }}" class="tile-link">
+                        <a href="{{ route('admin.dashboard') }}" class="tile-link">
                             <strong>Banner Settings</strong>
                         </a>
                     </div>
@@ -147,13 +147,13 @@
                         </a>
                     </div>
                     <div class="tile">
-                        <a href="{{ route('admin.domains.index') }}" class="tile-link">
-                            <strong>Manage Domains</strong>
+                        <a href="{{ route('admin.consent.logs.index') }}" class="tile-link">
+                            <strong>View Consent Logs</strong>
                         </a>
                     </div>
                     <div class="tile">
-                        <a href="{{ route('admin.consent.logs.index') }}" class="tile-link">
-                            <strong>View Consent Logs</strong>
+                        <a href="{{ route('admin.domains.index') }}" class="tile-link">
+                            <strong>Manage Domains</strong>
                         </a>
                     </div>
                 @endif
@@ -163,13 +163,13 @@
         <main class="py-4">
             @yield('content')
         </main>
-        @php
+        <!-- @php
             $cookieConsent = request()->cookie('consent_preferences');
             $hasConsent = !empty($cookieConsent);
         @endphp
         @if(!$hasConsent)
             @include('consent.banner')
-        @endif
+        @endif -->
     </div>
     
     <!-- Bootstrap JS -->

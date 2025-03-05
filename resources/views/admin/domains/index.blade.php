@@ -46,6 +46,9 @@
                                                 <a href="{{ route('admin.domains.edit', $domain) }}" class="btn btn-sm btn-info">
                                                     Edit
                                                 </a>
+                                                <a href="{{ route('admin.banner-settings.edit', $domain) }}" class="btn btn-sm btn-primary">
+                                                    Banner Settings
+                                                </a>
                                                 <a href="{{ route('admin.domains.embed-code', $domain) }}" class="btn btn-sm btn-secondary">
                                                     Embed Code
                                                 </a>

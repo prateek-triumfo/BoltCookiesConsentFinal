@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Models;
-
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -21,6 +20,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'is_admin',
+        'role_id',
     ];
 
     /**
@@ -43,6 +44,33 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
         ];
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function domains()
+    {
+        return $this->belongsToMany(Domain::class, 'user_domains')
+            ->withTimestamps();
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return $this->role->slug === $role;
+    }
+
+    public function hasDomain(int $domainId): bool
+    {
+        return $this->domains()->where('domain_id', $domainId)->exists();
+    }
+
+    public function getIsAdminAttribute(): bool
+    {
+        return $this->hasRole('admin');
     }
 }

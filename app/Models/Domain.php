@@ -18,19 +18,32 @@ class Domain extends Model
         'banner_settings',
         'script_id',
         'last_used_at',
-        'consent_count'
+        'consent_count',
+        'status',
+        'user_id',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'banner_settings' => 'array',
         'last_used_at' => 'datetime',
-        'consent_count' => 'integer'
+        'consent_count' => 'integer',
+        'status' => 'boolean',
     ];
 
     public function consentLogs()
     {
         return $this->hasMany(ConsentLog::class);
+    }
+
+    public function bannerSetting()
+    {
+        return $this->hasOne(BannerSetting::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public static function findOrCreateByName($name)
@@ -92,10 +105,11 @@ class Domain extends Model
         apiKey: "%s"
     };
 </script>
-%s',
+<script id="%s" src="%s/consent/embed.js"></script>',
             $this->script_id,
             $this->api_key,
-            $this->getEmbedScript()
+            $this->script_id,
+            config('app.url')
         );
     }
 }

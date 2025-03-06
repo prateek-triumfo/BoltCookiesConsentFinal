@@ -11,9 +11,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+        ]);
         return [
             App\Http\Middleware\ConsentMiddleware::class, // Add it to an array
-            App\Http\Middleware\AdminMiddleware::class, // Add it to an array
         ];   
      })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -9,7 +9,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.banner.update', $domain) }}" method="POST">
+    <form action="{{ route('admin.banner-settings.update', $domain) }}" method="POST">
         @csrf
         @method('PUT')
 

@@ -11,7 +11,7 @@ class BannerSettingController extends Controller
 {
     public function edit(Domain $domain)
     {
-        $bannerSetting = $domain->bannerSetting ?? new BannerSetting(['domain_id' => $domain->id]);
+        $bannerSetting = $domain->bannerSetting ?? new BannerSetting();
         return view('admin.banner-settings.edit', compact('domain', 'bannerSetting'));
     }
 
@@ -20,45 +20,37 @@ class BannerSettingController extends Controller
         $validated = $request->validate([
             'banner_title' => 'required|string|max:255',
             'banner_description' => 'required|string',
-            'accept_all_text' => 'required|string|max:50',
-            'reject_all_text' => 'required|string|max:50',
-            'manage_settings_text' => 'required|string|max:50',
-            'save_preferences_text' => 'required|string|max:50',
-            'cancel_text' => 'required|string|max:50',
+            'accept_button_text' => 'required|string|max:50',
+            'reject_button_text' => 'required|string|max:50',
+            'settings_button_text' => 'required|string|max:50',
             'primary_color' => 'required|string|max:7',
-            'accept_color' => 'required|string|max:7',
-            'reject_color' => 'required|string|max:7',
-            'background_color' => 'required|string|max:7',
+            'secondary_color' => 'required|string|max:7',
             'text_color' => 'required|string|max:7',
-            'font_family' => 'required|string',
-            'font_size' => 'required|integer|min:10|max:24',
-            'show_manage_button' => 'boolean',
-            'manage_button_position' => 'required|in:bottom-right,bottom-left,top-right,top-left',
-            'show_necessary_cookies' => 'boolean',
-            'show_statistics_cookies' => 'boolean',
-            'show_marketing_cookies' => 'boolean',
-            'show_preferences_cookies' => 'boolean',
+            'background_color' => 'required|string|max:7',
+            'font_family' => 'required|string|max:100',
+            'font_size' => 'required|string|max:20',
+            'show_reject_button' => 'boolean',
+            'show_settings_button' => 'boolean',
+            'button_position' => 'required|in:left,right,center',
         ]);
 
-        // Convert boolean fields
-        $validated['show_manage_button'] = $request->boolean('show_manage_button');
-        $validated['show_necessary_cookies'] = $request->boolean('show_necessary_cookies');
-        $validated['show_statistics_cookies'] = $request->boolean('show_statistics_cookies');
-        $validated['show_marketing_cookies'] = $request->boolean('show_marketing_cookies');
-        $validated['show_preferences_cookies'] = $request->boolean('show_preferences_cookies');
+        // Convert checkbox values to boolean
+        $validated['show_reject_button'] = $request->has('show_reject_button');
+        $validated['show_settings_button'] = $request->has('show_settings_button');
 
+        // Update or create banner settings
         $bannerSetting = $domain->bannerSetting()->updateOrCreate(
             ['domain_id' => $domain->id],
             $validated
         );
 
-        return redirect()->route('admin.banner.edit', $domain)
+        return redirect()->route('admin.domains.index')
             ->with('success', 'Banner settings updated successfully.');
     }
 
     public function preview(Domain $domain)
     {
-        $bannerSetting = $domain->bannerSetting ?? new BannerSetting(['domain_id' => $domain->id]);
+        $bannerSetting = $domain->bannerSetting;
         return view('admin.banner-settings.preview', compact('domain', 'bannerSetting'));
     }
 }

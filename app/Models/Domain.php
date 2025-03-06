@@ -31,6 +31,23 @@ class Domain extends Model
         'status' => 'boolean',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($domain) {
+            $domain->script_id = Str::random(32);
+            $domain->api_key = Str::random(64);
+        });
+
+        static::created(function ($domain) {
+            // Create default banner settings for the domain
+            $defaultSettings = BannerSetting::getDefaultSettings();
+            $defaultSettings['domain_id'] = $domain->id;
+            BannerSetting::create($defaultSettings);
+        });
+    }
+
     public function consentLogs()
     {
         return $this->hasMany(ConsentLog::class);
@@ -111,5 +128,13 @@ class Domain extends Model
             $this->script_id,
             config('app.url')
         );
+    }
+
+    public function getBannerSetting()
+    {
+        return $this->bannerSetting ?? BannerSetting::create([
+            'domain_id' => $this->id,
+            ...BannerSetting::getDefaultSettings()
+        ]);
     }
 }

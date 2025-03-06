@@ -6,7 +6,7 @@
         <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1>Banner Preview</h1>
-                <a href="{{ route('admin.banner.edit', $domain) }}" class="btn btn-primary btn-sm">Back to Settings</a>
+                <a href="{{ route('admin.banner-settings.edit', $domain) }}" class="btn btn-primary btn-sm">Back to Settings</a>
             </div>
 
             <div class="card">

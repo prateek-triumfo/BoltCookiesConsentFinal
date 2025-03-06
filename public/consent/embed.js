@@ -3,7 +3,7 @@
     const defaultConfig = {
         scriptId: null,
         apiKey: null,
-        apiUrl: window.BOLT_CONSENT_CONFIG.apiUrl || 'http://cokkiesconsent.local/api/consent'
+        apiUrl: window.location.origin + '/api/consent'
     };
 
     // Merge user config with defaults
@@ -18,11 +18,11 @@
         console.error(`
             <script>
                 window.BOLT_CONSENT_CONFIG = {
-                    scriptId: 'your-script-id-here',
-                    apiKey: 'your-api-key-here'
+                    scriptId: 'your-domain-script-id',  // Get this from your BoltConsent dashboard
+                    apiKey: 'your-domain-api-key'       // Get this from your BoltConsent dashboard
                 };
             </script>
-            <script src="http://cokkiesconsent.local/consent/embed.js"></script>
+            <script src=window.location.origin + '/consent/embed.js'></script>
         `);
         return;
     }
@@ -227,6 +227,167 @@
         document.body.appendChild(manageButton);
     }
 
+    // Function to show settings modal
+    function showSettingsModal() {
+        const modal = document.getElementById('bolt-consent-settings');
+        if (modal) {
+            modal.style.display = 'block';
+            modal.style.opacity = '1';
+            // Load current preferences
+            const savedConsent = JSON.parse(localStorage.getItem('bolt_consent') || '{}');
+            document.getElementById('statistics').checked = savedConsent.statistics || false;
+            document.getElementById('marketing').checked = savedConsent.marketing || false;
+            document.getElementById('preferences').checked = savedConsent.preferences || false;
+        }
+    }
+
+    // Function to hide settings modal
+    function hideSettingsModal() {
+        const modal = document.getElementById('bolt-consent-settings');
+        if (modal) {
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+    }
+
+    // Function to check if GTM should be loaded
+    function shouldLoadGTM() {
+        const consentData = JSON.parse(localStorage.getItem('bolt_consent') || '{}');
+        return consentData.marketing !== false && consentData.statistics !== false;
+    }
+
+    // Function to set GTM consent state
+    function setGTMConsentState(consentData) {
+        if (window.dataLayer) {
+            window.dataLayer.push({
+                'consent': {
+                    'analytics_storage': consentData.statistics ? 'granted' : 'denied',
+                    'ad_storage': consentData.marketing ? 'granted' : 'denied',
+                    'personalization_storage': consentData.preferences ? 'granted' : 'denied',
+                    'functionality_storage': consentData.preferences ? 'granted' : 'denied',
+                    'security_storage': 'granted' // Always enabled for essential security
+                }
+            });
+        }
+    }
+
+    // Function to validate and load GTM
+    function validateAndLoadGTM() {
+        const consentData = JSON.parse(localStorage.getItem('bolt_consent') || '{}');
+        
+        if (!shouldLoadGTM()) {
+            // Set denied consent state
+            setGTMConsentState(consentData);
+            
+            // Remove or disable GTM if consent is rejected
+            if (window.dataLayer) {
+                window.dataLayer.push({
+                    'event': 'consent_rejected',
+                    'consent_state': 'rejected',
+                    'consent_data': consentData
+                });
+            }
+
+            // Remove GTM script if it exists
+            const gtmScript = document.querySelector('script[src*="googletagmanager.com/gtm.js"]');
+            if (gtmScript) {
+                gtmScript.remove();
+            }
+
+            // Remove GA4 script if it exists
+            const gaScript = document.querySelector('script[src*="google-analytics.com/analytics.js"]');
+            if (gaScript) {
+                gaScript.remove();
+            }
+
+            // Remove Meta Pixel if it exists
+            const metaScript = document.querySelector('script[src*="connect.facebook.net/signals/config/"]');
+            if (metaScript) {
+                metaScript.remove();
+            }
+
+            return false;
+        } else {
+            // Set granted consent state
+            setGTMConsentState(consentData);
+            
+            // Push consent granted event
+            if (window.dataLayer) {
+                window.dataLayer.push({
+                    'event': 'consent_granted',
+                    'consent_state': 'granted',
+                    'consent_data': consentData
+                });
+            }
+            return true;
+        }
+    }
+
+    // Function to set cookies based on consent
+    function setConsentCookies(consentData) {
+        // Set consent data cookie
+        document.cookie = `bolt_consent=${JSON.stringify(consentData)};path=/;max-age=31536000;SameSite=Strict`;
+        
+        // Set individual category cookies
+        Object.keys(consentData).forEach(category => {
+            document.cookie = `bolt_consent_${category}=${consentData[category]};path=/;max-age=31536000;SameSite=Strict`;
+        });
+
+        // Set GTM consent cookies
+        if (window.dataLayer) {
+            window.dataLayer.push({
+                'consent': {
+                    'analytics_storage': consentData.statistics ? 'granted' : 'denied',
+                    'ad_storage': consentData.marketing ? 'granted' : 'denied',
+                    'personalization_storage': consentData.preferences ? 'granted' : 'denied',
+                    'functionality_storage': consentData.preferences ? 'granted' : 'denied',
+                    'security_storage': 'granted'
+                }
+            });
+        }
+    }
+
+    // Function to initialize GTM with consent mode
+    function initializeGTM() {
+        // Initialize dataLayer with consent mode
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+            'consent': {
+                'analytics_storage': 'denied',
+                'ad_storage': 'denied',
+                'personalization_storage': 'denied',
+                'functionality_storage': 'denied',
+                'security_storage': 'granted'
+            }
+        });
+    }
+
+    // Function to show banner
+    function showBanner() {
+        const banner = document.getElementById('bolt-consent-banner');
+        const manageButton = document.getElementById('bolt-consent-manage');
+        if (banner) {
+            banner.style.display = 'flex';
+        }
+        if (manageButton) {
+            manageButton.style.display = 'none';
+        }
+    }
+
+    // Function to hide banner
+    function hideBanner() {
+        const banner = document.getElementById('bolt-consent-banner');
+        const manageButton = document.getElementById('bolt-consent-manage');
+        if (banner) {
+            banner.style.display = 'none';
+        }
+        if (manageButton) {
+            manageButton.style.display = 'block';
+        }
+    }
+
     // Save consent to the server
     async function saveConsent(consentData) {
         try {
@@ -244,7 +405,7 @@
                     api_key: config.apiKey,
                     consent_data: consentData,
                     domain: window.location.hostname,
-                    ip_address: null, // Will be set by the server
+                    ip_address: null,
                     user_agent: navigator.userAgent,
                     device_type: getDeviceType(),
                     language: getBrowserLanguage()
@@ -259,21 +420,21 @@
             const data = await response.json();
             console.log('Consent saved successfully:', data);
             
-            // Store both the consent data and cookie_id in localStorage
+            // Store consent data in localStorage
             localStorage.setItem('bolt_consent', JSON.stringify(consentData));
             if (data.data && data.data.cookie_id) {
                 localStorage.setItem('bolt_consent_cookie_id', data.data.cookie_id);
             }
 
-            // Hide the banner and show manage button
-            const banner = document.getElementById('bolt-consent-banner');
-            const manageButton = document.getElementById('bolt-consent-manage');
-            if (banner) {
-                banner.style.display = 'none';
-            }
-            if (manageButton) {
-                manageButton.style.display = 'block';
-            }
+            // Set cookies based on consent
+            setConsentCookies(consentData);
+
+            // Validate GTM after saving consent
+            validateAndLoadGTM();
+
+            // Hide banner and show manage button
+            hideBanner();
+            hideSettingsModal();
 
             return data;
         } catch (error) {
@@ -285,6 +446,9 @@
 
     // Initialize the consent system
     function init() {
+        // Initialize GTM with consent mode
+        initializeGTM();
+
         // Check if consent already exists
         const savedConsent = localStorage.getItem('bolt_consent');
         const savedCookieId = localStorage.getItem('bolt_consent_cookie_id');
@@ -295,110 +459,12 @@
         if (savedConsent && savedCookieId) {
             console.log('Consent already exists:', { savedConsent, savedCookieId });
             // Hide banner and show manage button
-            const banner = document.getElementById('bolt-consent-banner');
-            const manageButton = document.getElementById('bolt-consent-manage');
-            if (banner) {
-                banner.style.display = 'none';
-            }
-            if (manageButton) {
-                manageButton.style.display = 'block';
-            }
+            hideBanner();
+            // Validate GTM with saved consent
+            validateAndLoadGTM();
         }
 
-        // Expose methods to window
-        window.boltConsent = {
-            acceptAll: function() {
-                saveConsent({
-                    necessary: true,
-                    statistics: true,
-                    marketing: true,
-                    preferences: true
-                });
-            },
-            rejectAll: function() {
-                saveConsent({
-                    necessary: true, // Necessary cookies are always required
-                    statistics: false,
-                    marketing: false,
-                    preferences: false
-                });
-            },
-            showSettings: function() {
-                console.log('showSettings called');
-                const modal = document.getElementById('bolt-consent-settings');
-                console.log('Modal element:', modal);
-                if (modal) {
-                    // First set display to block to ensure proper positioning
-                    modal.style.display = 'block';
-                    // Force a reflow
-                    modal.offsetHeight;
-                    // Then set flex properties for centering
-                    modal.style.display = 'flex';
-                    modal.style.alignItems = 'flex-start';
-                    modal.style.justifyContent = 'center';
-                    modal.style.paddingTop = '40px';
-                    modal.style.opacity = '1';
-                    modal.querySelector('div').style.transform = 'translateY(0)';
-                    // Ensure modal is on top
-                    modal.style.zIndex = '999999';
-                    modal.querySelector('div').style.zIndex = '1000000';
-                    console.log('Modal display set to flex');
-                    // Set current preferences in the modal
-                    const savedConsent = JSON.parse(localStorage.getItem('bolt_consent') || '{}');
-                    console.log('Current saved consent:', savedConsent);
-                    
-                    const statisticsCheckbox = document.getElementById('statistics');
-                    const marketingCheckbox = document.getElementById('marketing');
-                    const preferencesCheckbox = document.getElementById('preferences');
-                    
-                    console.log('Checkbox elements:', {
-                        statistics: statisticsCheckbox,
-                        marketing: marketingCheckbox,
-                        preferences: preferencesCheckbox
-                    });
-                    
-                    if (statisticsCheckbox) statisticsCheckbox.checked = savedConsent.statistics || false;
-                    if (marketingCheckbox) marketingCheckbox.checked = savedConsent.marketing || false;
-                    if (preferencesCheckbox) preferencesCheckbox.checked = savedConsent.preferences || false;
-                    
-                    console.log('Checkbox states updated');
-                } else {
-                    console.error('Modal element not found');
-                }
-            },
-            hideSettings: function() {
-                console.log('hideSettings called');
-                const modal = document.getElementById('bolt-consent-settings');
-                if (modal) {
-                    modal.style.opacity = '0';
-                    modal.querySelector('div').style.transform = 'translateY(-20px)';
-                    setTimeout(() => {
-                        modal.style.display = 'none';
-                        modal.style.alignItems = '';
-                        modal.style.justifyContent = '';
-                        modal.style.paddingTop = '';
-                    }, 300);
-                    console.log('Modal hidden');
-                }
-            },
-            saveSettings: function() {
-                console.log('saveSettings called');
-                const consentData = {
-                    necessary: true, // Necessary cookies are always required
-                    statistics: document.getElementById('statistics').checked,
-                    marketing: document.getElementById('marketing').checked,
-                    preferences: document.getElementById('preferences').checked
-                };
-                console.log('New consent data:', consentData);
-                saveConsent(consentData);
-                this.hideSettings();
-            }
-        };
-
-        // Attach event listeners after boltConsent is created
-        console.log('Attaching event listeners');
-        
-        // Banner buttons
+        // Add event listeners
         const rejectAllBtn = document.getElementById('bolt-reject-all');
         const acceptAllBtn = document.getElementById('bolt-accept-all');
         const manageSettingsBtn = document.getElementById('bolt-manage-settings');
@@ -406,42 +472,68 @@
         const closeSettingsBtn = document.getElementById('bolt-close-settings');
         const cancelSettingsBtn = document.getElementById('bolt-cancel-settings');
         const saveSettingsBtn = document.getElementById('bolt-save-settings');
-        
-        console.log('Button elements:', {
-            rejectAll: rejectAllBtn,
-            acceptAll: acceptAllBtn,
-            manageSettings: manageSettingsBtn,
-            manageCookies: manageCookiesBtn,
-            closeSettings: closeSettingsBtn,
-            cancelSettings: cancelSettingsBtn,
-            saveSettings: saveSettingsBtn
-        });
-        
-        // Function to safely add event listeners
-        function addClickListener(element, callback, buttonName) {
-            if (element) {
-                element.addEventListener('click', (e) => {
-                    console.log(`${buttonName} button clicked`);
-                    e.preventDefault();
-                    e.stopPropagation();
-                    callback();
-                });
-                console.log(`Added click listener to ${buttonName} button`);
-            } else {
-                console.warn(`${buttonName} button not found`);
-            }
+
+        // Reject All button
+        if (rejectAllBtn) {
+            rejectAllBtn.addEventListener('click', () => {
+                const consentData = {
+                    necessary: true,
+                    statistics: false,
+                    marketing: false,
+                    preferences: false
+                };
+                saveConsent(consentData);
+            });
         }
-        
-        // Add event listeners with debug logging
-        addClickListener(rejectAllBtn, () => window.boltConsent.rejectAll(), 'Reject All');
-        addClickListener(acceptAllBtn, () => window.boltConsent.acceptAll(), 'Accept All');
-        addClickListener(manageSettingsBtn, () => window.boltConsent.showSettings(), 'Manage Settings');
-        addClickListener(manageCookiesBtn, () => window.boltConsent.showSettings(), 'Manage Cookies');
-        addClickListener(closeSettingsBtn, () => window.boltConsent.hideSettings(), 'Close Settings');
-        addClickListener(cancelSettingsBtn, () => window.boltConsent.hideSettings(), 'Cancel Settings');
-        addClickListener(saveSettingsBtn, () => window.boltConsent.saveSettings(), 'Save Settings');
-        
-        console.log('Event listeners attached');
+
+        // Accept All button
+        if (acceptAllBtn) {
+            acceptAllBtn.addEventListener('click', () => {
+                const consentData = {
+                    necessary: true,
+                    statistics: true,
+                    marketing: true,
+                    preferences: true
+                };
+                saveConsent(consentData);
+            });
+        }
+
+        // Manage Settings button
+        if (manageSettingsBtn) {
+            manageSettingsBtn.addEventListener('click', showSettingsModal);
+        }
+
+        // Manage Cookies button (floating button)
+        if (manageCookiesBtn) {
+            manageCookiesBtn.addEventListener('click', () => {
+                showBanner();
+                showSettingsModal();
+            });
+        }
+
+        // Close Settings button
+        if (closeSettingsBtn) {
+            closeSettingsBtn.addEventListener('click', hideSettingsModal);
+        }
+
+        // Cancel Settings button
+        if (cancelSettingsBtn) {
+            cancelSettingsBtn.addEventListener('click', hideSettingsModal);
+        }
+
+        // Save Settings button
+        if (saveSettingsBtn) {
+            saveSettingsBtn.addEventListener('click', () => {
+                const consentData = {
+                    necessary: true,
+                    statistics: document.getElementById('statistics').checked,
+                    marketing: document.getElementById('marketing').checked,
+                    preferences: document.getElementById('preferences').checked
+                };
+                saveConsent(consentData);
+            });
+        }
     }
 
     // Start when DOM is ready
@@ -450,4 +542,12 @@
     } else {
         init();
     }
+
+    // Export functions for external use
+    window.boltConsent = {
+        validateAndLoadGTM,
+        showBanner,
+        hideBanner,
+        saveConsent
+    };
 })();

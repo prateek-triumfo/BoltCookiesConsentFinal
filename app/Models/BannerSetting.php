@@ -18,26 +18,22 @@ class BannerSetting extends Model
         'manage_button_text',
         'save_button_text',
         'cancel_button_text',
-        'banner_background_color',
-        'banner_text_color',
-        'button_background_color',
-        'button_text_color',
+        'primary_color',
+        'secondary_color',
+        'text_color',
+        'background_color',
         'font_family',
         'font_size',
         'show_reject_button',
         'show_manage_button',
-        'show_statistics',
-        'show_marketing',
-        'show_preferences',
-        'button_position'
+        'show_settings_button',
+        'button_position',
     ];
 
     protected $casts = [
         'show_reject_button' => 'boolean',
         'show_manage_button' => 'boolean',
-        'show_statistics' => 'boolean',
-        'show_marketing' => 'boolean',
-        'show_preferences' => 'boolean',
+        'show_settings_button' => 'boolean',
     ];
 
     public function domain()

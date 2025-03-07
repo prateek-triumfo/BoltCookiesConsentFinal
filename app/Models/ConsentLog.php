@@ -11,18 +11,20 @@ class ConsentLog extends Model
 
     protected $fillable = [
         'domain_id',
-        'consent_data',
-        'user_agent',
-        'ip_address',
         'domain',
         'cookie_id',
+        'ip_address',
+        'user_agent',
         'device_type',
         'language',
+        'consent_data',
+        'categories',
         'consented_at'
     ];
 
     protected $casts = [
         'consent_data' => 'array',
+        'categories' => 'array',
         'consented_at' => 'datetime'
     ];
 

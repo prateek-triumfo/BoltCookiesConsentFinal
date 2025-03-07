@@ -3,7 +3,7 @@
     const defaultConfig = {
         scriptId: null,
         apiKey: null,
-        apiUrl: window.location.origin + '/api/consent'
+        apiUrl: 'http://cokkiesconsent.local/api'  // Updated API URL
     };
 
     // Merge user config with defaults
@@ -22,7 +22,7 @@
                     apiKey: 'your-domain-api-key'       // Get this from your BoltConsent dashboard
                 };
             </script>
-            <script src=window.location.origin + '/consent/embed.js'></script>
+            <script src="/consent/embed.js"></script>
         `);
         return;
     }
@@ -47,184 +47,298 @@
     console.log('BoltConsent initialized with config:', config);
 
     // Create and inject the banner HTML
-    function createBanner() {
-        // Remove existing elements if they exist
-        const existingBanner = document.getElementById('bolt-consent-banner');
-        const existingManage = document.getElementById('bolt-consent-manage');
-        if (existingBanner) existingBanner.remove();
-        if (existingManage) existingManage.remove();
+    async function createBanner() {
+        try {
+            // Fetch banner settings from API
+            const response = await fetch(`${config.apiUrl}/banner-settings/${window.location.hostname}`);
+            const data = await response.json();
+            
+            if (!data.success) {
+                console.error('Failed to fetch banner settings:', data.error);
+                return;
+            }
 
-        const banner = document.createElement('div');
-        banner.id = 'bolt-consent-banner';
-        banner.innerHTML = `
-            <div class="bolt-consent-banner" style="
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: #fff;
-                padding: 20px;
-                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-                z-index: 9999;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            ">
-                <div style="flex: 1;">
-                    <p style="margin: 0;">We use cookies to enhance your browsing experience and analyze our traffic.</p>
-                </div>
-                <div style="margin-left: 20px;">
-                    <button id="bolt-reject-all" style="
-                        background: #f44336;
-                        color: white;
-                        border: none;
-                        padding: 8px 16px;
-                        border-radius: 4px;
-                        cursor: pointer;
-                        margin-right: 10px;
-                    ">Reject All</button>
-                    <button id="bolt-accept-all" style="
-                        background: #4CAF50;
-                        color: white;
-                        border: none;
-                        padding: 8px 16px;
-                        border-radius: 4px;
-                        cursor: pointer;
-                        margin-right: 10px;
-                    ">Accept All</button>
-                    <button id="bolt-manage-settings" style="
-                        background: #2196F3;
-                        color: white;
-                        border: none;
-                        padding: 8px 16px;
-                        border-radius: 4px;
-                        cursor: pointer;
-                    ">Manage Settings</button>
-                </div>
-            </div>
+            const settings = data.data.settings;
+            if (!settings || !settings.style) {
+                console.error('Invalid banner settings:', settings);
+                return;
+            }
+            
+            // Remove existing elements if they exist
+            const existingBanner = document.getElementById('bolt-consent-banner');
+            const existingManage = document.getElementById('bolt-consent-manage');
+            if (existingBanner) existingBanner.remove();
+            if (existingManage) existingManage.remove();
 
-            <!-- Settings Modal -->
-            <div id="bolt-consent-settings" style="
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0,0,0,0.5);
-                z-index: 999999;
-                overflow-y: auto;
-                display: none;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            ">
-                <div style="
-                    background: white;
-                    max-width: 600px;
-                    width: 90%;
-                    margin: 40px auto;
-                    padding: 30px;
-                    border-radius: 8px;
-                    position: relative;
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                    min-height: 200px;
-                    transform: translateY(-20px);
-                    transition: transform 0.3s ease;
-                    z-index: 1000000;
+            const banner = document.createElement('div');
+            banner.id = 'bolt-consent-banner';
+            banner.style.display = checkConsentExists() ? 'none' : 'block'; // Set initial display state
+            banner.innerHTML = `
+                <div class="bolt-consent-banner" style="
+                    position: fixed;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    background: ${settings.style.backgroundColor};
+                    color: ${settings.style.textColor};
+                    padding: 20px;
+                    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+                    z-index: 9999;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-family: ${settings.style.fontFamily};
+                    font-size: ${settings.style.fontSize};
                 ">
-                    <button id="bolt-close-settings" style="
-                        position: absolute;
-                        top: 10px;
-                        right: 10px;
-                        background: none;
-                        border: none;
-                        font-size: 24px;
-                        cursor: pointer;
-                        padding: 5px;
-                        line-height: 1;
-                        z-index: 1000001;
-                    ">&times;</button>
-                    
-                    <h2 style="margin-top: 0; margin-right: 30px; position: relative; z-index: 1000001;">Cookie Preferences</h2>
-                    
-                    <div class="consent-categories" style="margin-top: 20px; position: relative; z-index: 1000001;">
-                        <div class="consent-category">
-                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                <input type="checkbox" id="necessary" checked disabled style="margin-right: 10px;">
-                                <label for="necessary" style="font-weight: bold;">Necessary Cookies</label>
-                            </div>
-                            <p style="margin: 0 0 20px 0; color: #666;">These cookies are essential for the website to function properly.</p>
-                        </div>
-
-                        <div class="consent-category">
-                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                <input type="checkbox" id="statistics" style="margin-right: 10px;">
-                                <label for="statistics" style="font-weight: bold;">Statistics Cookies</label>
-                            </div>
-                            <p style="margin: 0 0 20px 0; color: #666;">These cookies help us understand how visitors interact with our website.</p>
-                        </div>
-
-                        <div class="consent-category">
-                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                <input type="checkbox" id="marketing" style="margin-right: 10px;">
-                                <label for="marketing" style="font-weight: bold;">Marketing Cookies</label>
-                            </div>
-                            <p style="margin: 0 0 20px 0; color: #666;">These cookies are used to track visitors across websites to display relevant advertisements.</p>
-                        </div>
-
-                        <div class="consent-category">
-                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                <input type="checkbox" id="preferences" style="margin-right: 10px;">
-                                <label for="preferences" style="font-weight: bold;">Preferences Cookies</label>
-                            </div>
-                            <p style="margin: 0 0 20px 0; color: #666;">These cookies allow the website to remember choices you make.</p>
-                        </div>
+                    <div style="flex: 1;">
+                        <p style="margin: 0;">${settings.description}</p>
                     </div>
-
-                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-                        <button id="bolt-cancel-settings" style="
-                            background: #f5f5f5;
-                            color: #333;
-                            border: none;
-                            padding: 8px 16px;
-                            border-radius: 4px;
-                            cursor: pointer;
-                            font-weight: 500;
-                        ">Cancel</button>
-                        <button id="bolt-save-settings" style="
-                            background: #4CAF50;
+                    <div style="margin-left: 20px;">
+                        ${settings.show_reject_button ? `
+                            <button id="bolt-reject-all" style="
+                                background: ${settings.style.secondaryColor};
+                                color: white;
+                                border: none;
+                                padding: 8px 16px;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                margin-right: 10px;
+                            ">${settings.reject_button_text}</button>
+                        ` : ''}
+                        <button id="bolt-accept-all" style="
+                            background: ${settings.style.primaryColor};
                             color: white;
                             border: none;
                             padding: 8px 16px;
                             border-radius: 4px;
                             cursor: pointer;
-                            font-weight: 500;
-                        ">Save Preferences</button>
+                            margin-right: 10px;
+                        ">${settings.accept_button_text}</button>
+                        ${settings.show_manage_button ? `
+                            <button id="bolt-manage-settings" style="
+                                background: ${settings.style.secondaryColor};
+                                color: white;
+                                border: none;
+                                padding: 8px 16px;
+                                border-radius: 4px;
+                                cursor: pointer;
+                            ">${settings.manage_button_text}</button>
+                        ` : ''}
                     </div>
                 </div>
-            </div>
-        `;
-        document.body.appendChild(banner);
 
-        // Create manage button separately
-        const manageButton = document.createElement('div');
-        manageButton.id = 'bolt-consent-manage';
-        manageButton.innerHTML = `
-            <button id="bolt-manage-cookies" style="
-                background: #2196F3;
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                border-radius: 4px;
-                cursor: pointer;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-                font-size: 14px;
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                z-index: 9998;
-            ">Manage Cookie Preferences</button>
-        `;
-        document.body.appendChild(manageButton);
+                <!-- Settings Modal -->
+                <div id="bolt-consent-settings" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0,0,0,0.5);
+                    z-index: 999999;
+                    overflow-y: auto;
+                    display: none;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                ">
+                    <div style="
+                        background: ${settings.style.backgroundColor};
+                        color: ${settings.style.textColor};
+                        max-width: 600px;
+                        width: 90%;
+                        margin: 40px auto;
+                        padding: 30px;
+                        border-radius: 8px;
+                        position: relative;
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                        min-height: 200px;
+                        transform: translateY(-20px);
+                        transition: transform 0.3s ease;
+                        z-index: 1000000;
+                        font-family: ${settings.style.fontFamily};
+                        font-size: ${settings.style.fontSize};
+                    ">
+                        <button id="bolt-close-settings" style="
+                            position: absolute;
+                            top: 10px;
+                            right: 10px;
+                            background: none;
+                            border: none;
+                            font-size: 24px;
+                            cursor: pointer;
+                            padding: 5px;
+                            line-height: 1;
+                            z-index: 1000001;
+                        ">&times;</button>
+                        
+                        <h2 style="margin-top: 0; margin-right: 30px; position: relative; z-index: 1000001;">${settings.title}</h2>
+                        
+                        <div class="consent-categories" style="margin-top: 20px; position: relative; z-index: 1000001;">
+                            <!-- Categories will be loaded here -->
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                            <button id="bolt-cancel-settings" style="
+                                background: ${settings.style.secondaryColor};
+                                color: white;
+                                border: none;
+                                padding: 8px 16px;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                font-weight: 500;
+                            ">${settings.cancel_button_text}</button>
+                            <button id="bolt-save-settings" style="
+                                background: ${settings.style.primaryColor};
+                                color: white;
+                                border: none;
+                                padding: 8px 16px;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                font-weight: 500;
+                            ">${settings.save_button_text}</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(banner);
+
+            // Add event listeners for buttons
+            const acceptAllBtn = document.getElementById('bolt-accept-all');
+            const rejectAllBtn = document.getElementById('bolt-reject-all');
+            const manageSettingsBtn = document.getElementById('bolt-manage-settings');
+            const closeSettingsBtn = document.getElementById('bolt-close-settings');
+            const cancelSettingsBtn = document.getElementById('bolt-cancel-settings');
+            const saveSettingsBtn = document.getElementById('bolt-save-settings');
+
+            if (acceptAllBtn) {
+                acceptAllBtn.addEventListener('click', async () => {
+                    const consentData = {};
+                    const categories = await fetch(`${config.apiUrl}/categories`).then(r => r.json());
+                    if (categories.success) {
+                        categories.data.forEach(category => {
+                            consentData[category.key] = !category.is_required;
+                        });
+                        await saveConsent(consentData);
+                    }
+                });
+            }
+
+            if (rejectAllBtn) {
+                rejectAllBtn.addEventListener('click', async () => {
+                    const consentData = {};
+                    const categories = await fetch(`${config.apiUrl}/categories`).then(r => r.json());
+                    if (categories.success) {
+                        categories.data.forEach(category => {
+                            consentData[category.key] = category.is_required;
+                        });
+                        await saveConsent(consentData);
+                    }
+                });
+            }
+
+            if (manageSettingsBtn) {
+                manageSettingsBtn.addEventListener('click', showSettingsModal);
+            }
+
+            if (closeSettingsBtn) {
+                closeSettingsBtn.addEventListener('click', hideSettingsModal);
+            }
+
+            if (cancelSettingsBtn) {
+                cancelSettingsBtn.addEventListener('click', hideSettingsModal);
+            }
+
+            if (saveSettingsBtn) {
+                saveSettingsBtn.addEventListener('click', async () => {
+                    const checkboxes = document.querySelectorAll('.consent-categories input[type="checkbox"]');
+                    const consentData = {};
+                    checkboxes.forEach(checkbox => {
+                        consentData[checkbox.id] = checkbox.checked;
+                    });
+                    await saveConsent(consentData);
+                });
+            }
+
+            // Create manage button separately if enabled
+            if (settings.show_manage_button) {
+                const manageButton = document.createElement('div');
+                manageButton.id = 'bolt-consent-manage';
+                manageButton.innerHTML = `
+                    <button id="bolt-manage-cookies" style="
+                        background: ${settings.style.secondaryColor};
+                        color: white;
+                        border: none;
+                        padding: 8px 16px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                        font-size: 14px;
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        z-index: 9998;
+                        font-family: ${settings.style.fontFamily};
+                    ">${settings.manage_button_text}</button>
+                `;
+                document.body.appendChild(manageButton);
+
+                // Add event listener for manage button
+                const manageCookiesBtn = document.getElementById('bolt-manage-cookies');
+                if (manageCookiesBtn) {
+                    manageCookiesBtn.addEventListener('click', showSettingsModal);
+                }
+            }
+
+        } catch (error) {
+            console.error('Error creating banner:', error);
+        }
+    }
+
+    // Function to show banner
+    function showBanner() {
+        const banner = document.getElementById('bolt-consent-banner');
+        const manageButton = document.getElementById('bolt-consent-manage');
+        if (banner) {
+            banner.style.display = 'block';
+            // Show only the manage settings button in the banner
+            const acceptAllBtn = document.getElementById('bolt-accept-all');
+            const rejectAllBtn = document.getElementById('bolt-reject-all');
+            if (acceptAllBtn) acceptAllBtn.style.display = 'none';
+            if (rejectAllBtn) rejectAllBtn.style.display = 'none';
+        }
+        if (manageButton) {
+            manageButton.style.display = 'none';
+        }
+    }
+
+    // Function to hide banner
+    function hideBanner() {
+        const banner = document.getElementById('bolt-consent-banner');
+        const manageButton = document.getElementById('bolt-consent-manage');
+        if (banner) {
+            banner.style.display = 'none';
+        }
+        if (manageButton) {
+            manageButton.style.display = 'block';
+        }
+    }
+
+    // Function to check if consent exists
+    function checkConsentExists() {
+        // Check localStorage
+        const savedConsent = localStorage.getItem('bolt_consent');
+        const savedCookieId = localStorage.getItem('bolt_consent_cookie_id');
+        
+        // Check cookies
+        const consentCookie = document.cookie.split('; ').find(row => row.startsWith('bolt_consent='));
+        
+        return savedConsent && savedCookieId && consentCookie;
+    }
+
+    // Function to get saved consent data
+    function getSavedConsent() {
+        const savedConsent = localStorage.getItem('bolt_consent');
+        return savedConsent ? JSON.parse(savedConsent) : null;
     }
 
     // Function to show settings modal
@@ -233,11 +347,46 @@
         if (modal) {
             modal.style.display = 'block';
             modal.style.opacity = '1';
-            // Load current preferences
-            const savedConsent = JSON.parse(localStorage.getItem('bolt_consent') || '{}');
-            document.getElementById('statistics').checked = savedConsent.statistics || false;
-            document.getElementById('marketing').checked = savedConsent.marketing || false;
-            document.getElementById('preferences').checked = savedConsent.preferences || false;
+
+            // Show the banner when opening settings
+            showBanner();
+
+            // Fetch consent categories from API
+            fetch(`${config.apiUrl}/categories`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const categoriesContainer = document.querySelector('.consent-categories');
+                        if (categoriesContainer) {
+                            categoriesContainer.innerHTML = data.data.map(category => `
+                                <div class="consent-category">
+                                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                        <input type="checkbox" 
+                                               id="${category.key}" 
+                                               ${category.is_required ? 'checked disabled' : ''} 
+                                               style="margin-right: 10px;">
+                                        <label for="${category.key}" style="font-weight: bold;">${category.name}</label>
+                                    </div>
+                                    <p style="margin: 0 0 20px 0; color: #666;">${category.description}</p>
+                                </div>
+                            `).join('');
+
+                            // Load saved preferences
+                            const savedConsent = getSavedConsent();
+                            if (savedConsent) {
+                                data.data.forEach(category => {
+                                    if (!category.is_required) {
+                                        const checkbox = document.getElementById(category.key);
+                                        if (checkbox) {
+                                            checkbox.checked = savedConsent[category.key] || false;
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching consent categories:', error));
         }
     }
 
@@ -261,14 +410,25 @@
     // Function to set GTM consent state
     function setGTMConsentState(consentData) {
         if (window.dataLayer) {
-            window.dataLayer.push({
+            const consentState = {
                 'consent': {
                     'analytics_storage': consentData.statistics ? 'granted' : 'denied',
                     'ad_storage': consentData.marketing ? 'granted' : 'denied',
                     'personalization_storage': consentData.preferences ? 'granted' : 'denied',
                     'functionality_storage': consentData.preferences ? 'granted' : 'denied',
-                    'security_storage': 'granted' // Always enabled for essential security
+                    'security_storage': 'granted'
                 }
+            };
+
+            // Add consent categories to dataLayer
+            const categories = Object.entries(consentData)
+                .filter(([key, value]) => value)
+                .map(([key]) => key);
+
+            window.dataLayer.push({
+                ...consentState,
+                'consent_categories': categories,
+                'consent_status': Object.values(consentData).every(v => v) ? 'all_accepted' : 'partial'
             });
         }
     }
@@ -364,37 +524,13 @@
         });
     }
 
-    // Function to show banner
-    function showBanner() {
-        const banner = document.getElementById('bolt-consent-banner');
-        const manageButton = document.getElementById('bolt-consent-manage');
-        if (banner) {
-            banner.style.display = 'flex';
-        }
-        if (manageButton) {
-            manageButton.style.display = 'none';
-        }
-    }
-
-    // Function to hide banner
-    function hideBanner() {
-        const banner = document.getElementById('bolt-consent-banner');
-        const manageButton = document.getElementById('bolt-consent-manage');
-        if (banner) {
-            banner.style.display = 'none';
-        }
-        if (manageButton) {
-            manageButton.style.display = 'block';
-        }
-    }
-
     // Save consent to the server
     async function saveConsent(consentData) {
         try {
             console.log('Saving consent with script ID:', config.scriptId);
             console.log('Consent data:', consentData);
 
-            const response = await fetch(`${config.apiUrl}/save`, {
+            const response = await fetch(`${config.apiUrl}/consent/save`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -408,7 +544,10 @@
                     ip_address: null,
                     user_agent: navigator.userAgent,
                     device_type: getDeviceType(),
-                    language: getBrowserLanguage()
+                    language: getBrowserLanguage(),
+                    categories: Object.entries(consentData)
+                        .filter(([key, value]) => value)
+                        .map(([key]) => key)
                 })
             });
 
@@ -449,15 +588,12 @@
         // Initialize GTM with consent mode
         initializeGTM();
 
-        // Check if consent already exists
-        const savedConsent = localStorage.getItem('bolt_consent');
-        const savedCookieId = localStorage.getItem('bolt_consent_cookie_id');
-        
         // Create elements
         createBanner();
         
-        if (savedConsent && savedCookieId) {
-            console.log('Consent already exists:', { savedConsent, savedCookieId });
+        // Check if consent already exists
+        if (checkConsentExists()) {
+            console.log('Consent already exists, showing manage button');
             // Hide banner and show manage button
             hideBanner();
             // Validate GTM with saved consent
@@ -514,22 +650,33 @@
 
         // Close Settings button
         if (closeSettingsBtn) {
-            closeSettingsBtn.addEventListener('click', hideSettingsModal);
+            closeSettingsBtn.addEventListener('click', () => {
+                hideSettingsModal();
+                if (checkConsentExists()) {
+                    hideBanner();
+                }
+            });
         }
 
         // Cancel Settings button
         if (cancelSettingsBtn) {
-            cancelSettingsBtn.addEventListener('click', hideSettingsModal);
+            cancelSettingsBtn.addEventListener('click', () => {
+                hideSettingsModal();
+                if (checkConsentExists()) {
+                    hideBanner();
+                }
+            });
         }
 
         // Save Settings button
         if (saveSettingsBtn) {
             saveSettingsBtn.addEventListener('click', () => {
+                const checkboxes = document.querySelectorAll('.consent-categories input[type="checkbox"]');
                 const consentData = {
                     necessary: true,
-                    statistics: document.getElementById('statistics').checked,
-                    marketing: document.getElementById('marketing').checked,
-                    preferences: document.getElementById('preferences').checked
+                    statistics: document.getElementById('statistics')?.checked || false,
+                    marketing: document.getElementById('marketing')?.checked || false,
+                    preferences: document.getElementById('preferences')?.checked || false
                 };
                 saveConsent(consentData);
             });
